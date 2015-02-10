@@ -50,10 +50,19 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+/* UART handler declaration */
+UART_HandleTypeDef UartHandle;
+
+/* Buffer used for transmission */
+uint8_t aTxBuffer[] = " **** UART_TwoBoards_ComPolling ****  **** UART_TwoBoards_ComPolling ****  **** UART_TwoBoards_ComPolling **** ";
+
+/* Buffer used for reception */
+uint8_t aRxBuffer[RXBUFFERSIZE];
+    
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-static void EXTILine0_Config(void);
+static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -84,16 +93,82 @@ int main(void)
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
 
-  /* Configure EXTI Line0 (connected to PA0 pin) in interrupt mode */
-  EXTILine0_Config();
-
   /* Add your application code here
      */
-  BSP_LED_On(LED3);
-  BSP_LED_On(LED4);
-  BSP_LED_On(LED5);
+  
+#if 1   // FIXME
+  
+  /*##-1- Configure the UART peripheral ######################################*/
+  /* Put the USART peripheral in the Asynchronous mode (UART Mode) */
+  /* UART1 configured as follow:
+      - Word Length = 8 Bits
+      - Stop Bit = One Stop bit
+      - Parity = None
+      - BaudRate = 9600 baud
+      - Hardware flow control disabled (RTS and CTS signals) */
+  UartHandle.Instance          = USARTx;
+  
+  UartHandle.Init.BaudRate     = 9600;
+  UartHandle.Init.WordLength   = UART_WORDLENGTH_8B;
+  UartHandle.Init.StopBits     = UART_STOPBITS_1;
+  UartHandle.Init.Parity       = UART_PARITY_NONE;
+  UartHandle.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
+  UartHandle.Init.Mode         = UART_MODE_TX_RX;
+  UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
+    
+  if(HAL_UART_Init(&UartHandle) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+  /* Configure KEY Button */
+  BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
+	
+  /* Wait for USER Button press before starting the Communication */
+  while (BSP_PB_GetState(BUTTON_KEY) == RESET)
+  {
+    /* Toggle LED3 waiting for user to press button */
+    BSP_LED_Toggle(LED3);
+    HAL_Delay(40);		
+  }
+  /* Wait for USER Button release before starting the Communication */
+  while (BSP_PB_GetState(BUTTON_KEY) == SET)
+  {
+  }
+  
+  /* Turn LED3 off */
+  BSP_LED_Off(LED3);
+  
+  /* The board sends the message and expects to receive it back */
+  
+  /*##-2- Start the transmission process #####################################*/  
+  /* While the UART in reception process, user can transmit data through 
+     "aTxBuffer" buffer */
+  if(HAL_UART_Transmit(&UartHandle, (uint8_t*)aTxBuffer, TXBUFFERSIZE, 5000)!= HAL_OK)
+  {
+    Error_Handler();   
+  }
+    
+  /* Turn LED6 on: Transfer in transmission process is correct */
   BSP_LED_On(LED6);
-
+  
+  /*##-3- Put UART peripheral in reception process ###########################*/  
+  if(HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE, 5000) != HAL_OK)
+  {
+    Error_Handler();  
+  }
+    
+  /* Turn LED4 on: Transfer in reception process is correct */
+  BSP_LED_On(LED4);
+  
+  /*##-4- Compare the sent and received buffers ##############################*/
+  if(Buffercmp((uint8_t*)aTxBuffer,(uint8_t*)aRxBuffer,RXBUFFERSIZE))
+  {
+    Error_Handler();  
+  }
+  
+#endif
+  
   /* Infinite loop */
   while (1)
   {
@@ -170,26 +245,38 @@ static void SystemClock_Config(void)
 }
 
 /**
-  * @brief  Configures EXTI Line0 (connected to PA0 pin) in interrupt mode
-  * @param  None
+  * @brief  UART error callbacks
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report transfer error, and you can
+  *         add your own implementation.
   * @retval None
   */
-static void EXTILine0_Config(void)
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 {
-  GPIO_InitTypeDef   GPIO_InitStructure;
+  /* Turn LED3 on: Transfer error in reception/transmission process */
+  BSP_LED_On(LED3); 
+}
 
-  /* Enable GPIOA clock */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  
-  /* Configure PA0 pin as input floating */
-  GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Pin = GPIO_PIN_0;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+/**
+  * @brief  Compares two buffers.
+  * @param  pBuffer1, pBuffer2: buffers to be compared.
+  * @param  BufferLength: buffer's length
+  * @retval 0  : pBuffer1 identical to pBuffer2
+  *         >0 : pBuffer1 differs from pBuffer2
+  */
+static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
+{
+  while (BufferLength--)
+  {
+    if ((*pBuffer1) != *pBuffer2)
+    {
+      return BufferLength;
+    }
+    pBuffer1++;
+    pBuffer2++;
+  }
 
-  /* Enable and set EXTI Line0 Interrupt to the lowest priority */
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 0);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+  return 0;
 }
 
 /**
@@ -199,7 +286,8 @@ static void EXTILine0_Config(void)
   */
 static void Error_Handler(void)
 {
-  /* User may add here some code to deal with this error */
+  /* Turn LED5 on */
+  BSP_LED_On(LED5);
   while(1)
   {
   }
