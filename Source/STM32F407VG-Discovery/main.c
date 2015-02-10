@@ -53,6 +53,7 @@
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
+static void EXTILine0_Config(void);
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -74,13 +75,24 @@ int main(void)
      */
   HAL_Init();
 
+  /* Configure LED3, LED4, LED5 and LED6 */
+  BSP_LED_Init(LED3);
+  BSP_LED_Init(LED4);
+  BSP_LED_Init(LED5);
+  BSP_LED_Init(LED6);
+  
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
 
+  /* Configure EXTI Line0 (connected to PA0 pin) in interrupt mode */
+  EXTILine0_Config();
 
   /* Add your application code here
      */
-
+  BSP_LED_On(LED3);
+  BSP_LED_On(LED4);
+  BSP_LED_On(LED5);
+  BSP_LED_On(LED6);
 
   /* Infinite loop */
   while (1)
@@ -156,6 +168,30 @@ static void SystemClock_Config(void)
     __HAL_FLASH_PREFETCH_BUFFER_ENABLE();
   }
 }
+
+/**
+  * @brief  Configures EXTI Line0 (connected to PA0 pin) in interrupt mode
+  * @param  None
+  * @retval None
+  */
+static void EXTILine0_Config(void)
+{
+  GPIO_InitTypeDef   GPIO_InitStructure;
+
+  /* Enable GPIOA clock */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  
+  /* Configure PA0 pin as input floating */
+  GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Pin = GPIO_PIN_0;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  /* Enable and set EXTI Line0 Interrupt to the lowest priority */
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+}
+
 /**
   * @brief  This function is executed in case of error occurrence.
   * @param  None
