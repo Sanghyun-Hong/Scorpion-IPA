@@ -1,0 +1,12 @@
+#
+# Excludes several files needless to commit.
+#
+
+# For Common.
+
+# For STM32F407VG Project.
+Project/STM32F407VG-Discovery/*
+!Project/STM32F407VG-Discovery/Scorpion-IPA-STM32F407VG.ewd
+!Project/STM32F407VG-Discovery/Scorpion-IPA-STM32F407VG.ewp
+!Project/STM32F407VG-Discovery/Scorpion-IPA-STM32F407VG.eww
+
