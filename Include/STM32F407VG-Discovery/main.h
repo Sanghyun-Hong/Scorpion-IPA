@@ -43,6 +43,9 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4_discovery.h"
 
+/* Includes User-defined headers */
+#include "ub_uart.h"
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

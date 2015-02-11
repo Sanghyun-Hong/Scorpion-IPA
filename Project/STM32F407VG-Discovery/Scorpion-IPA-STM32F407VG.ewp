@@ -1140,6 +1140,9 @@
     <file>
       <name>$PROJ_DIR$\..\..\Source\STM32F407VG-Discovery\stm32f4xx_it.c</name>
     </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Source\STM32F407VG-Discovery\ub_uart.c</name>
+    </file>
   </group>
 </project>
 
