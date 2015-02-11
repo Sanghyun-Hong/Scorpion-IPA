@@ -131,7 +131,7 @@ int main(void)
     */
   
   /* Sends debug message through the UART */
-  if(UB_UART_Debug(5000, " My Name is Sanghyun Hong %d ", 500)!= HAL_OK)
+  if(UB_UART_Debug(" My Name is Sanghyun Hong %d ", 500)!= HAL_OK)
   {
     Error_Handler();
   }

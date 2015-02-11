@@ -47,6 +47,9 @@
 /* Definition for USARTx's NVIC */
 #define USARTx_IRQn                      USART2_IRQn
 #define USARTx_IRQHandler                USART2_IRQHandler
+   
+/* Definition for USARTx's Timeout */
+#define USARTx_TIMEOUT                   5000
 /******************************************************************************/
 
 /* Size of Transmission/Reception buffer */
@@ -65,10 +68,9 @@ HAL_StatusTypeDef UB_UART_Init(USART_TypeDef *instance,
                                uint32_t mode, 
                                uint32_t oversampling);
 HAL_StatusTypeDef UB_UART_DeInit(void);
-HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size, uint32_t timeout);
-HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size, uint32_t Timeout);
-
-HAL_StatusTypeDef UB_UART_Debug(uint32_t Timeout, const char * format, ...);
+HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size);
+HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size);
+HAL_StatusTypeDef UB_UART_Debug(const char * format, ...);
 
 #ifdef __cplusplus
 }

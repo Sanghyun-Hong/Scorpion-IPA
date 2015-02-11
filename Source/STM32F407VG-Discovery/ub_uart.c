@@ -96,14 +96,14 @@ HAL_StatusTypeDef UB_UART_DeInit(void)
   * @retval HAL_OK      : Successfully transmitted
             HAL_ERROR   : An error occured
   */
-HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size, uint32_t timeout)
+HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size)
 {
   
   /** Starts the transmission process
     *  - While the UART in reception process, user can transmit data through 
     *    "aTxBuffer" buffer 
     */
-  if(HAL_UART_Transmit(&UartHandle, pData, Size, timeout)!= HAL_OK)
+  if(HAL_UART_Transmit(&UartHandle, pData, Size, USARTx_TIMEOUT)!= HAL_OK)
   {
     return HAL_ERROR;
   }
@@ -122,12 +122,12 @@ HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size, uint32_t timeo
   * @retval HAL_OK      : Successfully received
             HAL_ERROR   : An error occured
   */
-HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size, uint32_t Timeout)
+HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size)
 {
   /** Put UART peripheral in reception process
     *  - 
     */  
-  if(HAL_UART_Receive(&UartHandle, pData, Size, Timeout) != HAL_OK)
+  if(HAL_UART_Receive(&UartHandle, pData, Size, USARTx_TIMEOUT) != HAL_OK)
   {
     return HAL_ERROR;
   }
@@ -145,7 +145,7 @@ HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size, uint32_t Timeou
   * @retval HAL_OK      : Successfully received
             HAL_ERROR   : An error occured
   */
-HAL_StatusTypeDef UB_UART_Debug(uint32_t Timeout, const char * format, ...)
+HAL_StatusTypeDef UB_UART_Debug(const char * format, ...)
 {
   va_list list;
   HAL_StatusTypeDef ret;
@@ -156,7 +156,7 @@ HAL_StatusTypeDef UB_UART_Debug(uint32_t Timeout, const char * format, ...)
   vsprintf(str, format, list);
   
   /* Sends debug message through UART interface */ 
-  if(HAL_UART_Transmit(&UartHandle, (uint8_t *)str, len, Timeout) != HAL_OK)
+  if(HAL_UART_Transmit(&UartHandle, (uint8_t *)str, len, USARTx_TIMEOUT) != HAL_OK)
   {
     ret = HAL_ERROR;
   }
