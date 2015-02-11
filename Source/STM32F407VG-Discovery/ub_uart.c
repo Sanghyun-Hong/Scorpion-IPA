@@ -11,6 +11,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "ub_uart.h"
 
+#include "stdio.h"
+#include "stdarg.h"
+#include "stdlib.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -83,7 +87,7 @@ HAL_StatusTypeDef UB_UART_DeInit(void)
   }
   
 }
-
+                              
 /**
   * @brief  Transmit the given buffer through uart interface
   * @param  pData       : Data buffer to transfer
@@ -132,4 +136,36 @@ HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size, uint32_t Timeou
     return HAL_OK;
   }
   
+}
+
+/**
+  * @brief  Print the debug message through UART peripheral
+  * @param  Timeout     : UART timeout
+  * @param  format      : Formatted debug message
+  * @retval HAL_OK      : Successfully received
+            HAL_ERROR   : An error occured
+  */
+HAL_StatusTypeDef UB_UART_Debug(uint32_t Timeout, const char * format, ...)
+{
+  va_list list;
+  HAL_StatusTypeDef ret;
+  va_start(list, format);
+  
+  int len = vsnprintf(0, 0, format, list);
+  char *str = (char *) malloc(len + 1);
+  vsprintf(str, format, list);
+  
+  /* Sends debug message through UART interface */ 
+  if(HAL_UART_Transmit(&UartHandle, (uint8_t *)str, len, Timeout) != HAL_OK)
+  {
+    ret = HAL_ERROR;
+  }
+  else 
+  {
+    ret = HAL_OK;
+  }
+  
+  free(str);
+  va_end(list);
+  return ret;
 }

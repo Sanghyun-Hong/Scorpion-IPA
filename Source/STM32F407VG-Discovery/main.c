@@ -50,17 +50,11 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-
-/* Buffer used for transmission */
-uint8_t aTxBuffer[] = " **** UART_TwoBoards_ComPolling ****  **** UART_TwoBoards_ComPolling ****  **** UART_TwoBoards_ComPolling **** ";
-
-/* Buffer used for reception */
-uint8_t aRxBuffer[BUFFERSIZE(aTxBuffer)];
-    
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
+
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -136,24 +130,14 @@ int main(void)
     * Execute user-defined code, which are enlisted below
     */
   
-  /* The board sends the message and expects to receive it back */
-  /*  - Send */
-  if(UB_UART_Transmit((uint8_t*)aTxBuffer, BUFFERSIZE(aTxBuffer), 5000)!= HAL_OK)
+  /* Sends debug message through the UART */
+  if(UB_UART_Debug(5000, " My Name is Sanghyun Hong %d ", 500)!= HAL_OK)
   {
     Error_Handler();
   }
     
-  /*  - Turn LED6 on: Transfer in transmission process is correct */
+  /*  Turn LED6 on: Transfer in transmission process is correct */
   BSP_LED_On(LED6);
-  
-  /*  - Receive */  
-  if(UB_UART_Receive((uint8_t *)aRxBuffer, BUFFERSIZE(aRxBuffer), 5000) != HAL_OK)
-  {
-    Error_Handler();  
-  }
-    
-  /*  - Turn LED4 on: Transfer in reception process is correct */
-  BSP_LED_On(LED4);
     
   /* Infinite loop */
   while (1)

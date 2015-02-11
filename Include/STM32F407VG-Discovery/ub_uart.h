@@ -22,8 +22,11 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-/* User can use this section to tailor USARTx/UARTx instance used and associated 
-   resources */
+
+/*******************************************************************************
+  * User can use this section to tailor USARTx/UARTx instance
+  * used and associated resources
+  *****************************************************************************/
 /* Definition for USARTx clock resources */
 #define USARTx                           USART2
 #define USARTx_CLK_ENABLE()              __HAL_RCC_USART2_CLK_ENABLE();
@@ -44,12 +47,13 @@
 /* Definition for USARTx's NVIC */
 #define USARTx_IRQn                      USART2_IRQn
 #define USARTx_IRQHandler                USART2_IRQHandler
+/******************************************************************************/
 
 /* Size of Transmission/Reception buffer */
-#define BUFFERSIZE(x)                    (COUNTOF(x) - 1)
-  
+#define BUFFERSIZE(x)           (COUNTOF(x) - 1)
+
 /* Exported macro ------------------------------------------------------------*/
-#define COUNTOF(__BUFFER__)   (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
+#define COUNTOF(__BUFFER__)     (sizeof(__BUFFER__) / sizeof(*(__BUFFER__)))
 
 /* Exported functions ------------------------------------------------------- */
 HAL_StatusTypeDef UB_UART_Init(USART_TypeDef *instance, 
@@ -64,6 +68,7 @@ HAL_StatusTypeDef UB_UART_DeInit(void);
 HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size, uint32_t timeout);
 HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size, uint32_t Timeout);
 
+HAL_StatusTypeDef UB_UART_Debug(uint32_t Timeout, const char * format, ...);
 
 #ifdef __cplusplus
 }
