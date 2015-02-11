@@ -50,14 +50,12 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-/* UART handler declaration */
-UART_HandleTypeDef UartHandle;
 
 /* Buffer used for transmission */
 uint8_t aTxBuffer[] = " **** UART_TwoBoards_ComPolling ****  **** UART_TwoBoards_ComPolling ****  **** UART_TwoBoards_ComPolling **** ";
 
 /* Buffer used for reception */
-uint8_t aRxBuffer[RXBUFFERSIZE];
+uint8_t aRxBuffer[BUFFERSIZE(aTxBuffer)];
     
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
@@ -93,33 +91,28 @@ int main(void)
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
 
-  /* Add your application code here
-     */
-  
-#if 1   // FIXME
-  
-  /*##-1- Configure the UART peripheral ######################################*/
-  /* Put the USART peripheral in the Asynchronous mode (UART Mode) */
-  /* UART1 configured as follow:
+  /* Configure UART2 as follow:
       - Word Length = 8 Bits
       - Stop Bit = One Stop bit
       - Parity = None
       - BaudRate = 9600 baud
       - Hardware flow control disabled (RTS and CTS signals) */
-  UartHandle.Instance          = USARTx;
-  
-  UartHandle.Init.BaudRate     = 9600;
-  UartHandle.Init.WordLength   = UART_WORDLENGTH_8B;
-  UartHandle.Init.StopBits     = UART_STOPBITS_1;
-  UartHandle.Init.Parity       = UART_PARITY_NONE;
-  UartHandle.Init.HwFlowCtl    = UART_HWCONTROL_NONE;
-  UartHandle.Init.Mode         = UART_MODE_TX_RX;
-  UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
-    
-  if(HAL_UART_Init(&UartHandle) != HAL_OK)
+  if(UB_UART_Init(USARTx,
+                  9600,
+                  UART_WORDLENGTH_8B,
+                  UART_STOPBITS_1,
+                  UART_PARITY_NONE,
+                  UART_HWCONTROL_NONE,
+                  UART_MODE_TX_RX,
+                  UART_OVERSAMPLING_16) != HAL_OK) 
   {
     Error_Handler();
   }
+  
+  /**
+    * Before executing the user-defined code below,
+    * The code stops at here until user button is clicked
+    */
   
   /* Configure KEY Button */
   BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
@@ -139,36 +132,29 @@ int main(void)
   /* Turn LED3 off */
   BSP_LED_Off(LED3);
   
-  /* The board sends the message and expects to receive it back */
+  /**
+    * Execute user-defined code, which are enlisted below
+    */
   
-  /*##-2- Start the transmission process #####################################*/  
-  /* While the UART in reception process, user can transmit data through 
-     "aTxBuffer" buffer */
-  if(HAL_UART_Transmit(&UartHandle, (uint8_t*)aTxBuffer, TXBUFFERSIZE, 5000)!= HAL_OK)
+  /* The board sends the message and expects to receive it back */
+  /*  - Send */
+  if(UB_UART_Transmit((uint8_t*)aTxBuffer, BUFFERSIZE(aTxBuffer), 5000)!= HAL_OK)
   {
-    Error_Handler();   
+    Error_Handler();
   }
     
-  /* Turn LED6 on: Transfer in transmission process is correct */
+  /*  - Turn LED6 on: Transfer in transmission process is correct */
   BSP_LED_On(LED6);
   
-  /*##-3- Put UART peripheral in reception process ###########################*/  
-  if(HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE, 5000) != HAL_OK)
+  /*  - Receive */  
+  if(UB_UART_Receive((uint8_t *)aRxBuffer, BUFFERSIZE(aRxBuffer), 5000) != HAL_OK)
   {
     Error_Handler();  
   }
     
-  /* Turn LED4 on: Transfer in reception process is correct */
+  /*  - Turn LED4 on: Transfer in reception process is correct */
   BSP_LED_On(LED4);
-  
-  /*##-4- Compare the sent and received buffers ##############################*/
-  if(Buffercmp((uint8_t*)aTxBuffer,(uint8_t*)aRxBuffer,RXBUFFERSIZE))
-  {
-    Error_Handler();  
-  }
-  
-#endif
-  
+    
   /* Infinite loop */
   while (1)
   {
@@ -258,6 +244,20 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
 }
 
 /**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
+static void Error_Handler(void)
+{
+  /* Turn LED5 on */
+  BSP_LED_On(LED5);
+  while(1)
+  {
+  }
+}
+
+/**
   * @brief  Compares two buffers.
   * @param  pBuffer1, pBuffer2: buffers to be compared.
   * @param  BufferLength: buffer's length
@@ -277,20 +277,6 @@ static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferL
   }
 
   return 0;
-}
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-static void Error_Handler(void)
-{
-  /* Turn LED5 on */
-  BSP_LED_On(LED5);
-  while(1)
-  {
-  }
 }
 
 #ifdef  USE_FULL_ASSERT
