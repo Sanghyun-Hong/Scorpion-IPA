@@ -87,7 +87,7 @@
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
-          <state>7.30.3.8061</state>
+          <state>7.30.4.8186</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -959,6 +959,9 @@
     <name>STM32F4-Discovery</name>
     <file>
       <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F4-Discovery\stm32f4_discovery.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F4-Discovery\stm32f4_discovery_camera.c</name>
     </file>
   </group>
   <group>

@@ -42,12 +42,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "stm32f4_discovery.h"
+#include "stm32f4_discovery_camera.h"
 
 /* Includes User-defined headers */
 #include "ub_uart.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
+/* LCD Frame Buffer address - FIXME */
+#define CAMERA_FRAME_BUFFER               0xC0260000
+#define LCD_FRAME_BUFFER                  0xC0130000
+#define LCD_FRAME_BUFFER_LAYER1           0xC0000000
+#define CONVERTED_FRAME_BUFFER            0xC0390000
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 

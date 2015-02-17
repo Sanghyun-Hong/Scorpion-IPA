@@ -179,7 +179,25 @@ void USARTx_IRQHandler(void)
   HAL_UART_IRQHandler(& UartHandle);
 }
 
+/**
+  * @brief  This function handles DMA2 Stream1 Handler.
+  * @param  None
+  * @retval None
+  */
+void DMA2_Stream1_IRQHandler(void)
+{
+  BSP_CAMERA_DMA_IRQHandler();
+}
 
+/**
+  * @brief  This function handles DCMI Handler.
+  * @param  None
+  * @retval None
+  */
+void DCMI_IRQHandler(void)
+{
+  BSP_CAMERA_IRQHandler();
+}
 
 /**
   * @brief  This function handles PPP interrupt request.
