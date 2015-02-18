@@ -13,7 +13,7 @@
 #include "stm32f4_discovery_io.h"
 
 /* Include Camera component Driver */
-#include "../Components/ov2640/ov2640.h"
+#include "../Components/mt9m111/mt9m111.h"
 
 /** @addtogroup BSP
   * @{
@@ -52,7 +52,11 @@ typedef enum
 /** @defgroup STM32F4_DISCOVERY_CAMERA_Exported_Constants
   * @{
   */
-#define CAMERA_I2C_ADDRESS 0x60 // FIXME
+/* Slave address when SADDR is high  */
+#define CAMERA_I2C_ADDRESS 0xBA
+
+/* Slave address when SADDR is low  */
+//#define CAMERA_I2C_ADDRESS 0x90
 /**
   * @}
   */

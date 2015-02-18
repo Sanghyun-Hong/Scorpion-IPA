@@ -86,10 +86,10 @@ uint8_t BSP_CAMERA_Init(uint32_t Resolution)
   DCMI_MspInit();  
   HAL_DCMI_Init(phdcmi);
   
-  if(ov2640_ReadID(CAMERA_I2C_ADDRESS) == OV2640_ID)
+  if(mt9m111_ReadID(CAMERA_I2C_ADDRESS) == MT9M111_ID)
   { 
     /* Initialize the camera driver structure */
-    camera_drv = &ov2640_drv;     
+    camera_drv = &mt9m111_drv;     
     
     /* Camera Init */   
     camera_drv->Init(CAMERA_I2C_ADDRESS, Resolution);

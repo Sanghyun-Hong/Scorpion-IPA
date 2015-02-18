@@ -184,20 +184,20 @@ typedef enum
 #endif /* BSP_I2C_SPEED */
 
 /* I2C peripheral configuration defines (control interface of the audio codec) */
-#define DISCOVERY_I2Cx                            I2C1
-#define DISCOVERY_I2Cx_CLK_ENABLE()               __I2C1_CLK_ENABLE()
+#define DISCOVERY_I2Cx                            I2C2
+#define DISCOVERY_I2Cx_CLK_ENABLE()               __I2C2_CLK_ENABLE()
 #define DISCOVERY_I2Cx_SCL_SDA_GPIO_CLK_ENABLE()  __GPIOB_CLK_ENABLE()
-#define DISCOVERY_I2Cx_SCL_SDA_AF                 GPIO_AF4_I2C1
+#define DISCOVERY_I2Cx_SCL_SDA_AF                 GPIO_AF4_I2C2
 #define DISCOVERY_I2Cx_SCL_SDA_GPIO_PORT          GPIOB
-#define DISCOVERY_I2Cx_SCL_PIN                    GPIO_PIN_6
-#define DISCOVERY_I2Cx_SDA_PIN                    GPIO_PIN_9
+#define DISCOVERY_I2Cx_SCL_PIN                    GPIO_PIN_10
+#define DISCOVERY_I2Cx_SDA_PIN                    GPIO_PIN_11
 
-#define DISCOVERY_I2Cx_FORCE_RESET()              __I2C1_FORCE_RESET()
-#define DISCOVERY_I2Cx_RELEASE_RESET()            __I2C1_RELEASE_RESET()
+#define DISCOVERY_I2Cx_FORCE_RESET()              __I2C2_FORCE_RESET()
+#define DISCOVERY_I2Cx_RELEASE_RESET()            __I2C2_RELEASE_RESET()
 
 /* I2C interrupt requests */                  
-#define DISCOVERY_I2Cx_EV_IRQn                    I2C1_EV_IRQn
-#define DISCOVERY_I2Cx_ER_IRQn                    I2C1_ER_IRQn
+#define DISCOVERY_I2Cx_EV_IRQn                    I2C2_EV_IRQn
+#define DISCOVERY_I2Cx_ER_IRQn                    I2C2_ER_IRQn
 
 /* Maximum Timeout values for flags waiting loops. These timeouts are not based
    on accurate values, they just guarantee that the application will not remain
