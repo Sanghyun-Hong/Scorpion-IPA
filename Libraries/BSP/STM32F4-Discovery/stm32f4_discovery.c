@@ -514,7 +514,7 @@ static HAL_StatusTypeDef I2Cx_ReadMultiple(uint8_t Addr, uint16_t Reg, uint16_t 
 {
   HAL_StatusTypeDef status = HAL_OK;
   
-  status = HAL_I2C_Mem_Read(&heval_I2c, Addr, (uint16_t)Reg, MemAddress, Buffer, Length, I2C_TIMEOUT);
+  status = HAL_I2C_Mem_Read(&I2cHandle, Addr, (uint16_t)Reg, MemAddress, Buffer, Length, I2cxTimeout);
   
   /* Check the communication status */
   if(status != HAL_OK)
@@ -537,7 +537,7 @@ static HAL_StatusTypeDef I2Cx_WriteMultiple(uint8_t Addr, uint16_t Reg, uint16_t
 {
   HAL_StatusTypeDef status = HAL_OK;
   
-  status = HAL_I2C_Mem_Write(&heval_I2c, Addr, (uint16_t)Reg, MemAddress, Buffer, Length, I2C_TIMEOUT);
+  status = HAL_I2C_Mem_Write(&I2cHandle, Addr, (uint16_t)Reg, MemAddress, Buffer, Length, I2cxTimeout);
   
   /* Check the communication status */
   if(status != HAL_OK)
@@ -557,7 +557,7 @@ static HAL_StatusTypeDef I2Cx_WriteMultiple(uint8_t Addr, uint16_t Reg, uint16_t
   */
 static HAL_StatusTypeDef I2Cx_IsDeviceReady(uint16_t DevAddress, uint32_t Trials)
 { 
-  return (HAL_I2C_IsDeviceReady(&heval_I2c, DevAddress, Trials, I2C_TIMEOUT));
+  return (HAL_I2C_IsDeviceReady(&I2cHandle, DevAddress, Trials, I2cxTimeout));
 }
 
 /**
