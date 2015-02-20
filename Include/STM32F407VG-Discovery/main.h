@@ -45,6 +45,7 @@
 #include "stm32f4_discovery_camera.h"
 
 /* Includes User-defined headers */
+#include "ub_timer.h"
 #include "ub_uart.h"
 
 /* Exported types ------------------------------------------------------------*/

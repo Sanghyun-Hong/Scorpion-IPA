@@ -48,8 +48,16 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+/* A flag for enabling debugging messages in main */
+#ifndef DEBUG_MAIN
+#define DEBUG_MAIN
+#endif
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+/* Counter Prescaler value */
+uint32_t uhPrescalerValue = 0;
+
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void Error_Handler(void);
@@ -102,7 +110,63 @@ int main(void)
   {
     Error_Handler();
   }
+
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("UART/USART Initialization Done.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
   
+  /* Initialize TIMx peripheral as follow:
+       + Prescaler = 0
+       + Period = 665
+       + ClockDivision = 0
+       + Counter direction = Up
+  */
+  if(UB_TIM_PWM_Init(TIMx,
+                     uhPrescalerValue,
+                     PERIOD_VALUE,
+                     0,
+                     TIM_COUNTERMODE_UP) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+  /* Configure TIMx peripheral as follow:
+       + Polarity = High
+       + Fastmode = Disable
+       + Pulse Value = 333
+       + Channel = Timer Channel 1
+  */
+  if(UB_TIM_PWM_ConfigChannel(TIM_OCPOLARITY_HIGH,
+                              TIM_OCFAST_DISABLE,
+                              PULSE1_VALUE,
+                              TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("TIM(PWM Mode) Initialization Done.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* Generate the PWM signal */
+  if(UB_TIM_PWM_Start(TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("TIM(PWM Mode) Singal Generation Started.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+
   /**
     * Before executing the user-defined code below,
     * The code stops at here until user button is clicked
@@ -234,7 +298,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
   */
 static void Error_Handler(void)
 {
-  /* Turn LED5 on */
+  /* Turn LED5 on - RED */
   BSP_LED_On(LED5);
   while(1)
   {
