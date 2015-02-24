@@ -69,8 +69,7 @@
 typedef struct
 {
   void     (*Init)(uint16_t, uint32_t);
-  uint16_t (*ReadID)(uint16_t);  
-  void     (*Config)(uint16_t, uint32_t, uint32_t, uint32_t);
+  // FIXME - Add more relevant functions in here
 }CAMERA_DrvTypeDef;
 
 /**

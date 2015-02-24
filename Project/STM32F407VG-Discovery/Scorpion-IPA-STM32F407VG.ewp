@@ -87,7 +87,7 @@
         </option>
         <option>
           <name>OGLastSavedByProductVersion</name>
-          <state>7.30.4.8186</state>
+          <state>7.30.3.8061</state>
         </option>
         <option>
           <name>GeneralEnableMisra</name>
@@ -953,6 +953,12 @@
     <name>CMSIS</name>
     <file>
       <name>$PROJ_DIR$\..\..\Source\STM32F407VG-Discovery\system_stm32f4xx.c</name>
+    </file>
+  </group>
+  <group>
+    <name>Components</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\Libraries\BSP\Components\mt9m111\mt9m111.c</name>
     </file>
   </group>
   <group>

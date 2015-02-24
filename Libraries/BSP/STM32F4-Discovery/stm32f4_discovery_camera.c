@@ -49,6 +49,7 @@ uint32_t current_resolution;
   * @{
   */
 static void DCMI_MspInit(void);
+static void DCMI_MspDeInit(void);
 static uint32_t GetSize(uint32_t resolution);
 /**
   * @}
@@ -72,33 +73,37 @@ uint8_t BSP_CAMERA_Init(uint32_t Resolution)
   /* Get the DCMI handle structure */
   phdcmi = &hdcmi_disco;
   
-  /*** Configures the DCMI to interface with the camera module ***/
   /* DCMI configuration */
   phdcmi->Init.CaptureRate      = DCMI_CR_ALL_FRAME;  
   phdcmi->Init.HSPolarity       = DCMI_HSPOLARITY_LOW;
   phdcmi->Init.SynchroMode      = DCMI_SYNCHRO_HARDWARE;
   phdcmi->Init.VSPolarity       = DCMI_VSPOLARITY_LOW;
   phdcmi->Init.ExtendedDataMode = DCMI_EXTEND_DATA_8B;
-  phdcmi->Init.PCKPolarity      = DCMI_PCKPOLARITY_RISING;
+  phdcmi->Init.PCKPolarity      = DCMI_PCKPOLARITY_RISING;      // Falling(?)
   phdcmi->Instance              = DCMI;  
 
   /* DCMI Initialization */
   DCMI_MspInit();  
   HAL_DCMI_Init(phdcmi);
   
-  if(mt9m111_ReadID(CAMERA_I2C_ADDRESS) == MT9M111_ID)
+#if 0   // FIXME - For simple test
+  if(MT9M111_ReadVersion(MT9M111_I2C_ADDRESS) == MT9M111_ID)
   { 
     /* Initialize the camera driver structure */
     camera_drv = &mt9m111_drv;     
     
     /* Camera Init */   
-    camera_drv->Init(CAMERA_I2C_ADDRESS, Resolution);
+    camera_drv->Init(MT9M111_I2C_ADDRESS, Resolution);
     
     /* Return CAMERA_OK status */
     ret = CAMERA_OK;
-  } 
+  }
   
   current_resolution = Resolution;
+#else
+  uint16_t version = MT9M111_ReadVersion(MT9M111_I2C_ADDRESS);
+  UB_UART_Debug("MT9M111 Camera Module Version = 0x%X.\n", version);
+#endif
   
   return ret;
 }
@@ -194,10 +199,12 @@ uint8_t BSP_CAMERA_Stop(void)
   */
 void BSP_CAMERA_ContrastBrightnessConfig(uint32_t contrast_level, uint32_t brightness_level)
 {
+#if 0 // FIXME - Define this function later
   if(camera_drv->Config != NULL)
   {
-    camera_drv->Config(CAMERA_I2C_ADDRESS, CAMERA_CONTRAST_BRIGHTNESS, contrast_level, brightness_level);
+    camera_drv->Config(MT9M111_I2C_ADDRESS, CAMERA_CONTRAST_BRIGHTNESS, contrast_level, brightness_level);
   }  
+#endif
 }
 
 /**
@@ -212,10 +219,12 @@ void BSP_CAMERA_ContrastBrightnessConfig(uint32_t contrast_level, uint32_t brigh
   */
 void BSP_CAMERA_BlackWhiteConfig(uint32_t Mode)
 {
+#if 0 // FIXME - Define this function later
   if(camera_drv->Config != NULL)
   {
-    camera_drv->Config(CAMERA_I2C_ADDRESS, CAMERA_BLACK_WHITE, Mode, 0);
-  }  
+    camera_drv->Config(MT9M111_I2C_ADDRESS, CAMERA_BLACK_WHITE, Mode, 0);
+  }
+#endif
 }
 
 /**
@@ -223,17 +232,19 @@ void BSP_CAMERA_BlackWhiteConfig(uint32_t Mode)
   * @param  Effect: Color effect
   *          This parameter can be one of the following values:
   *            @arg  CAMERA_COLOR_EFFECT_ANTIQUE               
-  *            @arg  CAMERA_COLOR_EFFECT_BLUE        
+  *            @arg  CAMERA_COLOR_EFFECT_BLUE
   *            @arg  CAMERA_COLOR_EFFECT_GREEN    
   *            @arg  CAMERA_COLOR_EFFECT_RED        
   * @retval None
   */
 void BSP_CAMERA_ColorEffectConfig(uint32_t Effect)
 {
+#if 0 // FIXME - Define this function later
   if(camera_drv->Config != NULL)
   {
-    camera_drv->Config(CAMERA_I2C_ADDRESS, CAMERA_COLOR_EFFECT, Effect, 0);
-  }  
+    camera_drv->Config(MT9M111_I2C_ADDRESS, CAMERA_COLOR_EFFECT, Effect, 0);
+  }
+#endif
 }
 
 /**
@@ -308,7 +319,6 @@ static void DCMI_MspInit(void)
   GPIO_InitTypeDef GPIO_Init_Structure;
   DCMI_HandleTypeDef *hdcmi = &hdcmi_disco;
   
-  /*** Enable peripherals and GPIO clocks ***/
   /* Enable DCMI clock */
   __DCMI_CLK_ENABLE();
 
@@ -320,8 +330,22 @@ static void DCMI_MspInit(void)
   __GPIOB_CLK_ENABLE();
   __GPIOE_CLK_ENABLE();
 
-  /*** Configure the GPIO ***/
-  /* Configure DCMI GPIO as alternate function */
+  /**   
+    *   DCMI GPIO Configuration (alternative function)
+    *
+    *   PA9   ----> DCMI_D0
+    *   PA10  ----> DCMI_D1
+    *   PE0   ----> DCMI_D2
+    *   PE1   ----> DCMI_D3
+    *   PE4   ----> DCMI_D4
+    *   PB6   ----> DCMI_D5
+    *   PB8   ----> DCMI_D6
+    *   PB9   ----> DCMI_D7
+    *
+    *   PA6   ----> DCMI_PCLK
+    *   PA4   ----> DCMI_HREF (HSYNC)
+    *   PB7   ----> DCMI_VSYNC
+    */
   GPIO_Init_Structure.Pin       = GPIO_PIN_4 | GPIO_PIN_6 |\
                                   GPIO_PIN_9 | GPIO_PIN_10; 
   GPIO_Init_Structure.Mode      = GPIO_MODE_AF_PP;
@@ -346,16 +370,15 @@ static void DCMI_MspInit(void)
   GPIO_Init_Structure.Alternate = GPIO_AF13_DCMI;
   HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure);
  
-  /*** Configure the DMA ***/
-  /* Set the parameters to be configured */
+  /* Configure the DMA : Set the parameters to be configured */
   hdma_disco.Init.Channel             = DMA_CHANNEL_1;
   hdma_disco.Init.Direction           = DMA_PERIPH_TO_MEMORY;
   hdma_disco.Init.PeriphInc           = DMA_PINC_DISABLE;
   hdma_disco.Init.MemInc              = DMA_MINC_ENABLE;
   hdma_disco.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-  hdma_disco.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;
+  hdma_disco.Init.MemDataAlignment    = DMA_MDATAALIGN_WORD;    // HALFWORD(?)
   hdma_disco.Init.Mode                = DMA_CIRCULAR;
-  hdma_disco.Init.Priority            = DMA_PRIORITY_HIGH;
+  hdma_disco.Init.Priority            = DMA_PRIORITY_HIGH;      // VERY_HIGH(?)
   hdma_disco.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;         
   hdma_disco.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
   hdma_disco.Init.MemBurst            = DMA_MBURST_SINGLE;
@@ -366,7 +389,6 @@ static void DCMI_MspInit(void)
   /* Associate the initialized DMA handle to the DCMI handle */
   __HAL_LINKDMA(hdcmi, DMA_Handle, hdma_disco);
   
-  /*** Configure the NVIC for DCMI and DMA ***/
   /* NVIC configuration for DCMI transfer complete interrupt */
   HAL_NVIC_SetPriority(DCMI_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DCMI_IRQn);  
@@ -377,6 +399,41 @@ static void DCMI_MspInit(void)
   
   /* Configure the DMA stream */
   HAL_DMA_Init(hdcmi->DMA_Handle);  
+}
+
+/**
+  * @brief  De-Initializes the DCMI MSP.
+  * @param  None
+  * @retval None
+  */
+static void DCMI_MspDeInit(void)
+{
+  /* Disable DMA clock */
+  __DMA2_CLK_DISABLE();
+  
+  /* Disable DCMI clock */
+  __DCMI_CLK_DISABLE();
+  
+  /**   
+    *   DCMI GPIO Configuration (alternative function)
+    *
+    *   PA9   ----> DCMI_D0
+    *   PA10  ----> DCMI_D1
+    *   PE0   ----> DCMI_D2
+    *   PE1   ----> DCMI_D3
+    *   PE4   ----> DCMI_D4
+    *   PB6   ----> DCMI_D5
+    *   PB8   ----> DCMI_D6
+    *   PB9   ----> DCMI_D7
+    *
+    *   PA6   ----> DCMI_PCLK
+    *   PA4   ----> DCMI_HREF (HSYNC)
+    *   PB7   ----> DCMI_VSYNC
+    */
+  HAL_GPIO_DeInit( GPIOA, GPIO_PIN_4 | GPIO_PIN_6 | GPIO_PIN_9 | GPIO_PIN_10 );
+  HAL_GPIO_DeInit( GPIOB, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 );
+  HAL_GPIO_DeInit( GPIOE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 );
+  
 }
 
 /**

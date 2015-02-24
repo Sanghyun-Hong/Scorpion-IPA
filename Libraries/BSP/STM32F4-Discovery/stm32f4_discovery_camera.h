@@ -15,6 +15,9 @@
 /* Include Camera component Driver */
 #include "../Components/mt9m111/mt9m111.h"
 
+/* Include uart debug function */
+extern HAL_StatusTypeDef UB_UART_Debug(const char * format, ...);
+   
 /** @addtogroup BSP
   * @{
   */
@@ -53,10 +56,9 @@ typedef enum
   * @{
   */
 /* Slave address when SADDR is high  */
-#define CAMERA_I2C_ADDRESS 0xBA
+#define MT9M111_I2C_ADDRESS     0xBA
+#define MT9M111_I2c_ADDRESS_RD  0xBB
 
-/* Slave address when SADDR is low  */
-//#define CAMERA_I2C_ADDRESS 0x90
 /**
   * @}
   */

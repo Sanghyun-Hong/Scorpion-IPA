@@ -149,9 +149,13 @@ uint8_t         AUDIO_IO_Read(uint8_t Addr, uint8_t Reg);
 
 /* Camera IO functions */
 void            CAMERA_IO_Init(void);
-void            CAMERA_IO_Write(uint8_t Addr, uint8_t Reg, uint8_t Value);
-uint8_t         CAMERA_IO_Read(uint8_t Addr, uint8_t Reg);
+void            CAMERA_IO_WriteByte(uint8_t Addr, uint16_t Reg, uint8_t Value);
+uint8_t         CAMERA_IO_ReadByte(uint8_t Addr, uint16_t Reg);
+void            CAMERA_IO_WriteWord(uint8_t Addr, uint16_t Reg, uint16_t Value);
+uint16_t        CAMERA_IO_ReadWord(uint8_t Addr, uint16_t Reg);
 void            CAMERA_Delay(uint32_t Delay);
+
+static void     CAMERA_IO_Page_Map_Set(uint8_t Addr, uint16_t Reg);
 /**
   * @}
   */
@@ -491,7 +495,7 @@ static uint8_t  I2Cx_ReadData(uint8_t Addr, uint8_t Reg)
   HAL_StatusTypeDef status = HAL_OK;
   uint8_t value = 0;
   
-  status = HAL_I2C_Mem_Read(&I2cHandle, Addr, (uint16_t)Reg, I2C_MEMADD_SIZE_8BIT, &value, 1,I2cxTimeout);
+  status = HAL_I2C_Mem_Read(&I2cHandle, Addr, (uint16_t)Reg, I2C_MEMADD_SIZE_8BIT, &value, 1, I2cxTimeout);
   
   /* Check the communication status */
   if(status != HAL_OK)
@@ -812,26 +816,75 @@ void CAMERA_IO_Init(void)
 }
 
 /**
-  * @brief  Camera writes single data.
+  * @brief  Camera writes single byte.
   * @param  Addr: I2C address
   * @param  Reg: Reg address 
-  * @param  Value: Data to be written
+  * @param  Value: Byte data to be written
   * @retval None
   */
-void CAMERA_IO_Write(uint8_t Addr, uint8_t Reg, uint8_t Value)
+void CAMERA_IO_WriteByte(uint8_t Addr, uint16_t Reg, uint8_t Value)
 {
+  /* Set the page address */
+  CAMERA_IO_Page_Map_Set(Addr, Reg);
+  
+  /* Write the single byte data */
   I2Cx_WriteData(Addr, Reg, Value);
 }
 
 /**
-  * @brief  Camera reads single data.
+  * @brief  Camera reads single byte.
   * @param  Addr: I2C address
   * @param  Reg: Reg address 
-  * @retval Read data
+  * @retval Read byte data
   */
-uint8_t CAMERA_IO_Read(uint8_t Addr, uint8_t Reg)
+uint8_t CAMERA_IO_ReadByte(uint8_t Addr, uint16_t Reg)
 {
+  /* Set the page address */
+  CAMERA_IO_Page_Map_Set(Addr, Reg);
+  
+  /* Read the single byte data */
   return I2Cx_ReadData(Addr, Reg);
+}
+
+/**
+  * @brief  Camera writes single word.
+  * @param  Addr: I2C address
+  * @param  Reg: Reg address 
+  * @param  Value: Word data to be written
+  * @retval None
+  */
+void CAMERA_IO_WriteWord(uint8_t Addr, uint16_t Reg, uint16_t Value)
+{
+  uint8_t buffer[2] = {0,};
+  buffer[1] = (uint8_t)(Value & 0xFF);
+  buffer[0] = (uint8_t)((Value >> 8) & 0xFF);
+  
+  /* Set the page address */
+  CAMERA_IO_Page_Map_Set(Addr, Reg);
+  
+  /* Write the single word data */
+  I2Cx_WriteMultiple(Addr, Reg, I2C_MEMADD_SIZE_16BIT, buffer, 2);
+}
+
+/**
+  * @brief  Camera reads single word.
+  * @param  Addr: I2C address
+  * @param  Reg: Reg address 
+  * @retval Read word data
+  */
+uint16_t CAMERA_IO_ReadWord(uint8_t Addr, uint16_t Reg)
+{
+  uint16_t retval = 0;
+  uint8_t buffer[2] = {0,};
+  
+  /* Set the page address */
+  CAMERA_IO_Page_Map_Set(Addr, Reg);
+  
+  /* Read the single word data */
+  I2Cx_ReadMultiple(Addr, Reg, I2C_MEMADD_SIZE_16BIT, buffer, 2);
+  
+  retval = (uint16_t)((buffer[0] << 8) | buffer[1]);
+  return retval;
 }
 
 /**
@@ -844,7 +897,21 @@ void CAMERA_Delay(uint32_t Delay)
   HAL_Delay(Delay);
 }
 
-
+/**
+  * @brief  Set the register page before read/write.
+  * @param  Addr: I2C address
+  * @param  Reg: Reg address 
+  * @retval None
+  */
+static void CAMERA_IO_Page_Map_Set(uint8_t Addr, uint16_t Reg)
+{
+  uint16_t Page = (Reg >> 8);
+  uint8_t buffer[2] = {0,};
+  buffer[1] = (uint8_t)(Page & 0xFF);
+  buffer[0] = (uint8_t)((Page >> 8) & 0xFF);
+  
+  I2Cx_WriteMultiple(Addr, 0x00F0, I2C_MEMADD_SIZE_16BIT, buffer, 2);
+}
 /**
   * @}
   */ 

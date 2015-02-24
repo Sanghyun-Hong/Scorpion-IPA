@@ -59,6 +59,7 @@
 uint32_t uhPrescalerValue = 0;
 
 /* Private function prototypes -----------------------------------------------*/
+static void SavePicture(void);
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
@@ -90,6 +91,9 @@ int main(void)
   BSP_LED_Init(LED5);
   BSP_LED_Init(LED6);
   
+  /* Configure KEY Button */
+  BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
+  
   /* Configure the system clock to 168 MHz */
   SystemClock_Config();
 
@@ -118,95 +122,101 @@ int main(void)
   }
 #endif
   
-  /* Initialize TIMx peripheral as follow:
-       + Prescaler = 0
-       + Period = 665
-       + ClockDivision = 0
-       + Counter direction = Up
-  */
-  if(UB_TIM_PWM_Init(TIMx,
-                     uhPrescalerValue,
-                     PERIOD_VALUE,
-                     0,
-                     TIM_COUNTERMODE_UP) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  
-  /* Configure TIMx peripheral as follow:
-       + Polarity = High
-       + Fastmode = Disable
-       + Pulse Value = 333
-       + Channel = Timer Channel 1
-  */
-  if(UB_TIM_PWM_ConfigChannel(TIM_OCPOLARITY_HIGH,
-                              TIM_OCFAST_DISABLE,
-                              PULSE1_VALUE,
-                              TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  /* Output SYSCLK divided by 4(42 MHz) on MCO2 pin(PC9) */ 
+  HAL_RCC_MCOConfig(RCC_MCO2, RCC_MCO2SOURCE_SYSCLK, RCC_MCODIV_4);
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("TIM(PWM Mode) Initialization Done.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
-  
-  /* Generate the PWM signal */
-  if(UB_TIM_PWM_Start(TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("TIM(PWM Mode) Singal Generation Started.\n")!= HAL_OK)
+  if(UB_UART_Debug("MCO2(PC9) Initialization Done for Cam MCLK.\n")!= HAL_OK)
   {
     Error_Handler();
   }
 #endif
 
-  /**
-    * Before executing the user-defined code below,
-    * The code stops at here until user button is clicked
-    */
+  /* Initialize the Camera */
+  BSP_CAMERA_Init(RESOLUTION_R320x240);
   
-  /* Configure KEY Button */
-  BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
-	
-  /* Wait for USER Button press before starting the Communication */
-  while (BSP_PB_GetState(BUTTON_KEY) == RESET)
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("MT9M111 Camera Module Initialization Done.\n")!= HAL_OK)
   {
-    /* Toggle LED3 waiting for user to press button */
-    BSP_LED_Toggle(LED3);
-    HAL_Delay(40);		
+    Error_Handler();
   }
-  /* Wait for USER Button release before starting the Communication */
-  while (BSP_PB_GetState(BUTTON_KEY) == SET)
-  {
-  }
+#endif  
   
-  /* Turn LED3 off */
-  BSP_LED_Off(LED3);
+  /* Start the Camera Capture */
+  // FIXME(buffer) - BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("MT9M111 Capturing Started with Continuous Mode.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
   
   /**
     * Execute user-defined code, which are enlisted below
     */
-  
-  /* Sends debug message through the UART */
-  if(UB_UART_Debug(" My Name is Sanghyun Hong %d ", 500)!= HAL_OK)
+  while (1)
+  {
+    /* Turn LED3/LED6 off */
+    BSP_LED_Off(LED3);
+    BSP_LED_Off(LED6);
+    
+    /**
+      * 1. Wait for USER Button press before starting the Communication 
+      * 2. Wait for USER Button release before starting the Communication
+      */
+    while (BSP_PB_GetState(BUTTON_KEY) == RESET)
+    {
+      /* Toggle LED3 waiting for user to press button */
+      BSP_LED_Toggle(LED3);
+      HAL_Delay(40);		
+    }
+    while (BSP_PB_GetState(BUTTON_KEY) == SET);
+    
+    /* Capture the Camera image in here */
+    SavePicture();
+    
+    /* Turn LED3 off & Turn LED6 on: Success capture */
+    BSP_LED_Off(LED3);
+    BSP_LED_On(LED6);
+    
+    /* Delay for another capture */
+    HAL_Delay(500);
+    
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
   {
     Error_Handler();
   }
-    
-  /*  Turn LED6 on: Transfer in transmission process is correct */
-  BSP_LED_On(LED6);
-    
-  /* Infinite loop */
-  while (1)
-  {
+#endif
   }
+}
+
+/**
+  * @brief  Frame Event callback.
+  * @param  None
+  * @retval None
+*/
+void BSP_CAMERA_FrameEventCallback(void)
+{
+  /* Write the frame data to the specific storage */
+  // FIXME - BSP_LCD_DrawRGBImage(0, 0, 320, 240, (uint8_t *)CAMERA_FRAME_BUFFER);
+}
+
+/**
+  * @brief  Main routine for saving the camera image
+  * @param  None
+  * @retval None
+  */
+static void SavePicture(void)
+{
+  /* Suspend the camera capture */
+  BSP_CAMERA_Suspend();
+  
+  // TODO - Refer to 'PicturePrepare' routine and 'SavePicture' routine in the other project.
+  
+  /* Resume the camera capture */
+  BSP_CAMERA_Resume();
 }
 
 /**
