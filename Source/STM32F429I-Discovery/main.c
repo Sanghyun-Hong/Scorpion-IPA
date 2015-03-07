@@ -48,14 +48,24 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+/* A flag for enabling debugging messages in main */
+#ifndef DEBUG_MAIN
+#define DEBUG_MAIN
+#endif
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+/* Counter Prescaler value */
+uint32_t uhPrescalerValue = 0;
+
 /* Private function prototypes -----------------------------------------------*/
+static void SavePicture(void);
 static void SystemClock_Config(void);
 static void Error_Handler(void);
+static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
+
 
 /* Private functions ---------------------------------------------------------*/
-
 /**
   * @brief  Main program
   * @param  None
@@ -75,18 +85,133 @@ int main(void)
      */
   HAL_Init();
 
+  /* Configure LED3 */
+  BSP_LED_Init(LED3);
+  
+  /* Configure KEY Button */
+  BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
+  
   /* Configure the System clock to 180 MHz */
   SystemClock_Config();
 
+  /* Configure UART2 as follow:
+      - Word Length = 8 Bits
+      - Stop Bit = One Stop bit
+      - Parity = None
+      - BaudRate = 9600 baud
+      - Hardware flow control disabled (RTS and CTS signals) */
+  if(UB_UART_Init(USARTx,
+                  9600,
+                  UART_WORDLENGTH_8B,
+                  UART_STOPBITS_1,
+                  UART_PARITY_NONE,
+                  UART_HWCONTROL_NONE,
+                  UART_MODE_TX_RX,
+                  UART_OVERSAMPLING_16) != HAL_OK) 
+  {
+    Error_Handler();
+  }
 
-  /* Add your application code here
-     */
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("UART/USART Initialization Done.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* Output HSE divided by 4 on MCO1 pin(PA8) */ 
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_4);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("MCO1(PA8) Initialization Done for Cam MCLK.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
 
-
-  /* Infinite loop */
+  /* Initialize the Camera */
+  BSP_CAMERA_Init(RESOLUTION_R320x240);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("MT9M111 Camera Module Initialization Done.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif  
+  
+  /* Start the Camera Capture */
+  // FIXME(buffer) - BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("MT9M111 Capturing Started with Continuous Mode.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /**
+    * Execute user-defined code, which are enlisted below
+    */
   while (1)
   {
+    /* Turn LED3 off */
+    BSP_LED_Off(LED3);
+    
+    /**
+      * 1. Wait for USER Button press before starting the Communication 
+      * 2. Wait for USER Button release before starting the Communication
+      */
+    while (BSP_PB_GetState(BUTTON_KEY) == RESET)
+    {
+      /* Toggle LED3 waiting for user to press button */
+      BSP_LED_Toggle(LED3);
+      HAL_Delay(40);		
+    }
+    while (BSP_PB_GetState(BUTTON_KEY) == SET);
+    
+    /* Capture the Camera image in here */
+    SavePicture();
+    
+    /* Turn LED3 on: Success capture */
+    BSP_LED_Off(LED3);
+    
+    /* Delay for another capture */
+    HAL_Delay(500);
+    
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
+  {
+    Error_Handler();
   }
+#endif
+  }
+}
+
+/**
+  * @brief  Frame Event callback.
+  * @param  None
+  * @retval None
+*/
+void BSP_CAMERA_FrameEventCallback(void)
+{
+  /* Write the frame data to the specific storage */
+  // FIXME - BSP_LCD_DrawRGBImage(0, 0, 320, 240, (uint8_t *)CAMERA_FRAME_BUFFER);
+}
+
+/**
+  * @brief  Main routine for saving the camera image
+  * @param  None
+  * @retval None
+  */
+static void SavePicture(void)
+{
+  /* Suspend the camera capture */
+  BSP_CAMERA_Suspend();
+  
+  // TODO - Refer to 'PicturePrepare' routine and 'SavePicture' routine in the other project.
+  
+  /* Resume the camera capture */
+  BSP_CAMERA_Resume();
 }
 
 /**
@@ -158,19 +283,56 @@ static void SystemClock_Config(void)
 }
 
 /**
+  * @brief  UART error callbacks
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report transfer error, and you can
+  *         add your own implementation.
+  * @retval None
+  */
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
+{
+  /* Turn LED3 on: Transfer error in reception/transmission process */
+  BSP_LED_On(LED4); 
+}
+
+/**
   * @brief  This function is executed in case of error occurrence.
   * @param  None
   * @retval None
   */
 static void Error_Handler(void)
 {
-  /* User may add here some code to deal with this error */
+  /* Turn LED4 on - RED */
+  BSP_LED_On(LED4);
   while(1)
   {
   }
 }
 
+/**
+  * @brief  Compares two buffers.
+  * @param  pBuffer1, pBuffer2: buffers to be compared.
+  * @param  BufferLength: buffer's length
+  * @retval 0  : pBuffer1 identical to pBuffer2
+  *         >0 : pBuffer1 differs from pBuffer2
+  */
+static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
+{
+  while (BufferLength--)
+  {
+    if ((*pBuffer1) != *pBuffer2)
+    {
+      return BufferLength;
+    }
+    pBuffer1++;
+    pBuffer2++;
+  }
+
+  return 0;
+}
+
 #ifdef  USE_FULL_ASSERT
+
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.

@@ -1,11 +1,11 @@
 /**
   ******************************************************************************
-  * @file    stm32f429i_discovery_io.h
+  * @file    stm324x9i_eval_camera.h
   * @author  MCD Application Team
-  * @version V2.1.1
+  * @version V2.0.3
   * @date    10-December-2014
-  * @brief   This file contains all the functions prototypes for the
-  *          stm32f429i_discovery_io.c driver.
+  * @brief   This file contains the common defines and functions prototypes for
+  *          the stm324x9i_eval_camera.c driver.
   ******************************************************************************
   * @attention
   *
@@ -37,80 +37,96 @@
   */ 
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F429I_DISCOVERY_IO_H
-#define __STM32F429I_DISCOVERY_IO_H
+#ifndef __STM32F429I_DISCOVERY_CAMERA_H
+#define __STM32F429I_DISCOVERY_CAMERA_H
 
 #ifdef __cplusplus
  extern "C" {
-#endif
+#endif 
 
 /* Includes ------------------------------------------------------------------*/
+/* Include IO Driver */
 #include "stm32f429i_discovery.h"
+   
+/* Include Camera component Driver */
+#include "../Components/mt9m111/mt9m111.h"
 
-#if 0   // FIXME
-/* Include IO component driver */
-#include "../Components/stmpe811/stmpe811.h"   
-#endif
-
+/* Include uart debug function */
+extern HAL_StatusTypeDef UB_UART_Debug(const char * format, ...);
+   
 /** @addtogroup BSP
   * @{
   */
 
-/** @addtogroup STM32F429I_DISCOVERY
+/** @addtogroup STM324x9I_EVAL
   * @{
   */
-
-/** @defgroup STM32F429I_DISCOVERY_IO
+    
+/** @addtogroup STM324x9I_EVAL_CAMERA
+  * @{
+  */ 
+   
+/** @defgroup STM324x9I_EVAL_CAMERA_Exported_Types
   * @{
   */
-
-/** @defgroup STM32F429I_DISCOVERY_IO_Exported_Types
-  * @{
-  */
+  
+/** 
+  * @brief  Camera State structures definition  
+  */  
 typedef enum 
 {
-  IO_OK       = 0,
-  IO_ERROR    = 1,
-  IO_TIMEOUT  = 2
-}IO_StatusTypeDef;
+  CAMERA_OK       = 0x00,
+  CAMERA_ERROR    = 0x01,
+  CAMERA_TIMEOUT  = 0x02 
+}Camera_StatusTypeDef;
+
+#define RESOLUTION_R160x120      CAMERA_R160x120      /* QQVGA Resolution     */
+#define RESOLUTION_R320x240      CAMERA_R320x240      /* QVGA Resolution      */
+#define RESOLUTION_R480x272      CAMERA_R480x272      /* 480x272 Resolution   */
+#define RESOLUTION_R640x480      CAMERA_R640x480      /* VGA Resolution       */  
 /**
   * @}
-  */  
-
-/** @defgroup STM32F429I_DISCOVERY_IO_Exported_Constants
+  */ 
+ 
+/** @defgroup STM32F4_DISCOVERY_CAMERA_Exported_Constants
   * @{
   */
-#define IO_PIN_0                     0x01
-#define IO_PIN_1                     0x02
-#define IO_PIN_2                     0x04
-#define IO_PIN_3                     0x08
-#define IO_PIN_4                     0x10
-#define IO_PIN_5                     0x20
-#define IO_PIN_6                     0x40
-#define IO_PIN_7                     0x80
-#define IO_PIN_ALL                   0xFF
+/* Slave address when SADDR is high  */
+#define MT9M111_I2C_ADDRESS     0xBA
+#define MT9M111_I2c_ADDRESS_RD  0xBB
+
 /**
   * @}
-  */  
+  */
 
-/** @defgroup STM32F429I_DISCOVERY_IO_Exported_Macros
+/** @defgroup STM324x9I_EVAL_CAMERA_Exported_Functions
   * @{
   */
+uint8_t BSP_CAMERA_Init(uint32_t Resolution);  
+void    BSP_CAMERA_ContinuousStart(uint8_t *buff);
+void    BSP_CAMERA_SnapshotStart(uint8_t *buff);
+void    BSP_CAMERA_Suspend(void);
+void    BSP_CAMERA_Resume(void);
+uint8_t BSP_CAMERA_Stop(void); 
+void    BSP_CAMERA_LineEventCallback(void);
+void    BSP_CAMERA_VsyncEventCallback(void);
+void    BSP_CAMERA_FrameEventCallback(void);
+void    BSP_CAMERA_ErrorCallback(void);
+
+/* Camera features functions prototype */
+void    BSP_CAMERA_ContrastBrightnessConfig(uint32_t contrast_level, uint32_t brightness_level);
+void    BSP_CAMERA_BlackWhiteConfig(uint32_t Mode);
+void    BSP_CAMERA_ColorEffectConfig(uint32_t Effect);
+
+/* To be called in DCMI_IRQHandler function */
+void    BSP_CAMERA_IRQHandler(void);
+/* To be called in DMA2_Stream1_IRQHandler function */
+void    BSP_CAMERA_DMA_IRQHandler(void);
+   
 /**
   * @}
-  */  
+  */ 
 
-/** @defgroup STM32F429I_DISCOVERY_IO_Exported_Functions
-  * @{
-  */
-uint8_t  BSP_IO_Init(void);
-uint8_t  BSP_IO_ITGetStatus(uint16_t IoPin);
-void     BSP_IO_ITClear(void);
-void     BSP_IO_ConfigPin(uint16_t IoPin, IO_ModeTypedef IoMode);
-void     BSP_IO_WritePin(uint16_t IoPin, uint8_t PinState);
-uint16_t BSP_IO_ReadPin(uint16_t IoPin);
-void     BSP_IO_TogglePin(uint16_t IoPin);
-  
 /**
   * @}
   */ 
@@ -118,10 +134,6 @@ void     BSP_IO_TogglePin(uint16_t IoPin);
 /**
   * @}
   */
-
-/**
-  * @}
-  */ 
 
 /**
   * @}
@@ -131,6 +143,6 @@ void     BSP_IO_TogglePin(uint16_t IoPin);
 }
 #endif
 
-#endif /* __STM32F429I_DISCOVERY_IO_H */
+#endif /* __STM32F429I_DISCOVERY_CAMERA_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -56,6 +56,7 @@
  extern "C" {
 #endif /* __cplusplus */
   
+
 /** @addtogroup Configuration_section_for_CMSIS
   * @{
   */

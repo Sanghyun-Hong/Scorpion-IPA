@@ -150,24 +150,24 @@ typedef enum
 /*############################### I2Cx #######################################*/
 /* User can use this section to tailor I2Cx instance used and associated 
    resources */
-#define DISCOVERY_I2Cx                          I2C3
-#define DISCOVERY_I2Cx_CLOCK_ENABLE()           __I2C3_CLK_ENABLE()
-#define DISCOVERY_I2Cx_FORCE_RESET()            __I2C3_FORCE_RESET()
-#define DISCOVERY_I2Cx_RELEASE_RESET()          __I2C3_RELEASE_RESET()
-#define DISCOVERY_I2Cx_SDA_GPIO_CLK_ENABLE()    __GPIOC_CLK_ENABLE()
-#define DISCOVERY_I2Cx_SCL_GPIO_CLK_ENABLE()    __GPIOA_CLK_ENABLE() 
-#define DISCOVERY_I2Cx_SDA_GPIO_CLK_DISABLE()   __GPIOC_CLK_DISABLE()
+#define DISCOVERY_I2Cx                          I2C1
+#define DISCOVERY_I2Cx_CLOCK_ENABLE()           __I2C1_CLK_ENABLE()
+#define DISCOVERY_I2Cx_FORCE_RESET()            __I2C1_FORCE_RESET()
+#define DISCOVERY_I2Cx_RELEASE_RESET()          __I2C1_RELEASE_RESET()
+#define DISCOVERY_I2Cx_SDA_GPIO_CLK_ENABLE()    __GPIOB_CLK_ENABLE()
+#define DISCOVERY_I2Cx_SCL_GPIO_CLK_ENABLE()    __GPIOB_CLK_ENABLE() 
+#define DISCOVERY_I2Cx_SDA_GPIO_CLK_DISABLE()   __GPIOB_CLK_DISABLE()
 
 /* Definition for DISCO I2Cx Pins */
 #define DISCOVERY_I2Cx_SCL_PIN                  GPIO_PIN_8
-#define DISCOVERY_I2Cx_SCL_GPIO_PORT            GPIOA
-#define DISCOVERY_I2Cx_SCL_SDA_AF               GPIO_AF4_I2C3
+#define DISCOVERY_I2Cx_SCL_GPIO_PORT            GPIOB
+#define DISCOVERY_I2Cx_SCL_SDA_AF               GPIO_AF4_I2C1
 #define DISCOVERY_I2Cx_SDA_PIN                  GPIO_PIN_9
-#define DISCOVERY_I2Cx_SDA_GPIO_PORT            GPIOC
+#define DISCOVERY_I2Cx_SDA_GPIO_PORT            GPIOB
 
 /* Definition for IOE I2Cx's NVIC */
-#define DISCOVERY_I2Cx_EV_IRQn                  I2C3_EV_IRQn
-#define DISCOVERY_I2Cx_ER_IRQn                  I2C3_ER_IRQn
+#define DISCOVERY_I2Cx_EV_IRQn                  I2C1_EV_IRQn
+#define DISCOVERY_I2Cx_ER_IRQn                  I2C1_ER_IRQn
 
 /* I2C clock speed configuration (in Hz) 
   WARNING: 
@@ -177,7 +177,7 @@ typedef enum
  #define BSP_I2C_SPEED                          100000
 #endif /* BSP_I2C_SPEED */
 
-#define I2Cx_TIMEOUT_MAX                    0x3000 /*<! The value of the maximal timeout for I2C waiting loops */
+#define I2Cx_TIMEOUT_MAX                        0x3000 /*<! The value of the maximal timeout for I2C waiting loops */
 
 /*############################### SPIx #######################################*/
 #define DISCOVERY_SPIx                          SPI5

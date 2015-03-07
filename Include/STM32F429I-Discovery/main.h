@@ -41,6 +41,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
+#include "stm32f429i_discovery.h"
+#include "stm32f429i_discovery_camera.h"
+
+/* Includes User-defined headers */
+#include "ub_timer.h"
+#include "ub_uart.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

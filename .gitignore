@@ -10,3 +10,8 @@ Project/STM32F407VG-Discovery/*
 !Project/STM32F407VG-Discovery/Scorpion-IPA-STM32F407VG.ewp
 !Project/STM32F407VG-Discovery/Scorpion-IPA-STM32F407VG.eww
 
+# For STM32F429I Project.
+Project/STM32F429I-Discovery/*
+!Project/STM32F429I-Discovery/Scorpion-IPA-STM32F429I.ewd
+!Project/STM32F429I-Discovery/Scorpion-IPA-STM32F429I.ewp
+!Project/STM32F429I-Discovery/Scorpion-IPA-STM32F429I.eww

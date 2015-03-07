@@ -44,6 +44,8 @@
 #endif 
 
 /* Includes ------------------------------------------------------------------*/
+#include "ub_uart.h"
+   
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -58,6 +60,10 @@ void SVC_Handler(void);
 void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
+void USARTx_IRQHandler(void);
+/* DMA and DCMI Interrupt handler for Camera module */
+void DMA2_Stream1_IRQHandler(void);
+void DCMI_IRQHandler(void);
 
 #ifdef __cplusplus
 }
