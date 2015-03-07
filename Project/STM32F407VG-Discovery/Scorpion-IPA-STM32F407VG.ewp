@@ -956,9 +956,18 @@
     </file>
   </group>
   <group>
+    <name>Components</name>
+    <file>
+      <name>$PROJ_DIR$\..\..\Libraries\BSP\Components\mt9m111\mt9m111.c</name>
+    </file>
+  </group>
+  <group>
     <name>STM32F4-Discovery</name>
     <file>
       <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F4-Discovery\stm32f4_discovery.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F4-Discovery\stm32f4_discovery_camera.c</name>
     </file>
   </group>
   <group>
@@ -1139,6 +1148,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\Source\STM32F407VG-Discovery\stm32f4xx_it.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Source\STM32F407VG-Discovery\ub_timer.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\Source\STM32F407VG-Discovery\ub_uart.c</name>
