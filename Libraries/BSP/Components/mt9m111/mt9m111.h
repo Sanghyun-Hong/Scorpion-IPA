@@ -38,6 +38,13 @@
   * @brief  MT9M111 ID  
   */  
 #define MT9M111_VERSION                 0x143A
+
+/** 
+  * @brief  MT9M111 I2C Slave address when SADDR is high.
+  */
+#define MT9M111_I2C_ADDRESS             0xBA
+#define MT9M111_I2c_ADDRESS_RD          0xBB
+   
 /** 
   * @brief  MT9M111 Registers  
   */
@@ -139,15 +146,17 @@
 /** @defgroup MT9M111_Exported_Functions
   * @{
   */ 
-void     MT9M111_Init(uint16_t DeviceAddr, uint32_t resolution);
-uint16_t MT9M111_ReadVersion(uint16_t DeviceAddr);
+void     MT9M111_Init(void);
+uint16_t MT9M111_ReadVersion(void);
 
-void     CAMERA_IO_Init(void);
-void     CAMERA_IO_WriteByte(uint8_t Addr, uint16_t Reg, uint8_t Value);
-uint8_t  CAMERA_IO_ReadByte(uint8_t Addr, uint16_t Reg);
-void     CAMERA_IO_WriteWord(uint8_t Addr, uint16_t Reg, uint16_t Value);
-uint16_t CAMERA_IO_ReadWord(uint8_t Addr, uint16_t Reg);
-void     CAMERA_Delay(uint32_t Delay);
+
+/* External functions defined in stm32f429i-discovery.c file */
+extern void     CAMERA_IO_Init(void);
+extern void     CAMERA_IO_WriteByte(uint8_t Addr, uint16_t Reg, uint8_t Value);
+extern uint8_t  CAMERA_IO_ReadByte(uint8_t Addr, uint16_t Reg);
+extern void     CAMERA_IO_WriteWord(uint8_t Addr, uint16_t Reg, uint16_t Value);
+extern uint16_t CAMERA_IO_ReadWord(uint8_t Addr, uint16_t Reg);
+extern void     CAMERA_Delay(uint32_t Delay);
 
 /* CAMERA driver structure */
 extern   CAMERA_DrvTypeDef   mt9m111_drv;

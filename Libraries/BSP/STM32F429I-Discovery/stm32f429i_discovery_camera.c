@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    stm324x9i_eval_camera.c
+  * @file    stm32f429i_discovery_camera.c
   * @author  MCD Application Team
   * @version V2.0.3
   * @date    10-December-2014
@@ -70,36 +70,36 @@
   * @{
   */
 
-/** @addtogroup STM324x9I_EVAL
+/** @addtogroup STM32F429I_DISCOVERY
   * @{
   */
     
-/** @addtogroup STM324x9I_EVAL_CAMERA
+/** @addtogroup STM32F429I_DISCOVERY_CAMERA
   * @{
   */ 
 
-/** @defgroup STM324x9I_EVAL_CAMERA_Private_TypesDefinitions
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Private_TypesDefinitions
   * @{
   */ 
 /**
   * @}
   */ 
 
-/** @defgroup STM324x9I_EVAL_CAMERA_Private_Defines
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Private_Defines
   * @{
   */
 /**
   * @}
   */ 
   
-/** @defgroup STM324x9I_EVAL_CAMERA_Private_Macros
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Private_Macros
   * @{
   */
 /**
   * @}
   */  
 
-/** @defgroup STM324x9I_EVAL_CAMERA_Private_Variables
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Private_Variables
   * @{
   */ 
 static DCMI_HandleTypeDef  hdcmi_disco;
@@ -109,9 +109,22 @@ uint32_t current_resolution;
   * @}
   */ 
   
-/** @defgroup STM324x9I_EVAL_CAMERA_Private_FunctionPrototypes
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Private_FunctionPrototypes
   * @{
   */
+/* New Libraries for a Camera Module */
+/**
+  * If the source code enables the camera power control function,
+  * then, these functions will be enabled by the feature.
+  */
+#ifdef  CAMERA_POWER_CONTROL
+  static void BSP_CAMERA_Init_Power(void);
+#endif
+static void BSP_CAMERA_Init_IO(void);
+static void BSP_CAMERA_Init_DCMI(void);
+static void BSP_SENSOR_Init_Sensor(void);
+    
+/* MSP Libraries */
 static void DCMI_MspInit(void);
 static void DCMI_MspDeInit(void);
 static uint32_t GetSize(uint32_t resolution);
@@ -119,57 +132,98 @@ static uint32_t GetSize(uint32_t resolution);
   * @}
   */ 
   
-/** @defgroup STM324x9I_EVAL_CAMERA_Private_Functions
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Private_Functions
   * @{
   */
-
-/**
-  * @brief  Initializes the camera.
-  * @param  Camera: Pointer to the camera configuration structure
-  * @retval Camera status
-  */
-uint8_t BSP_CAMERA_Init(uint32_t Resolution)
-{ 
-  DCMI_HandleTypeDef *phdcmi;
-  
-  uint8_t ret = CAMERA_ERROR;
-  
-  /* Get the DCMI handle structure */
-  phdcmi = &hdcmi_disco;
-  
-  /* DCMI configuration */
-  phdcmi->Init.CaptureRate      = DCMI_CR_ALL_FRAME;  
-  phdcmi->Init.HSPolarity       = DCMI_HSPOLARITY_LOW;
-  phdcmi->Init.SynchroMode      = DCMI_SYNCHRO_HARDWARE;
-  phdcmi->Init.VSPolarity       = DCMI_VSPOLARITY_LOW;
-  phdcmi->Init.ExtendedDataMode = DCMI_EXTEND_DATA_8B;
-  phdcmi->Init.PCKPolarity      = DCMI_PCKPOLARITY_RISING;
-  phdcmi->Instance              = DCMI;  
-
-  /* DCMI Initialization */
-  DCMI_MspInit();  
-  HAL_DCMI_Init(phdcmi);
-  
-#if 0   // FIXME - For simple test
-  if(MT9M111_ReadVersion(MT9M111_I2C_ADDRESS) == MT9M111_ID)
-  { 
-    /* Initialize the camera driver structure */
-    camera_drv = &mt9m111_drv;     
-    
-    /* Camera Init */   
-    camera_drv->Init(MT9M111_I2C_ADDRESS, Resolution);
-    
-    /* Return CAMERA_OK status */
-    ret = CAMERA_OK;
-  }
-  
-  current_resolution = Resolution;
-#else
-  uint16_t version = MT9M111_ReadVersion(MT9M111_I2C_ADDRESS);
-  UB_UART_Debug("MT9M111 Camera Module Version = 0x%X.\n", version);
+void BSP_CAMERA_Init(void)
+{
+#ifdef  CAMERA_POWER_CONTROL
+  /* Initialize the power */
+  BSP_CAMERA_Init_Power();
 #endif
   
-  return ret;
+  /* Initialize the I/O lines */
+  BSP_CAMERA_Init_IO();
+  
+  /* Initialize the DCMI interface */
+  BSP_CAMERA_Init_DCMI();
+  
+  /* Initialize the sensor module */
+  BSP_SENSOR_Init_Sensor();
+}
+
+/**
+  * If the source code enables the camera power control function,
+  * then, these functions will be enabled by the feature.
+  */
+#ifdef  CAMERA_POWER_CONTROL
+void BSP_CAMERA_PowerOn(void)
+{
+  /* Disable the output of the camera module */
+  BSP_CAMERA_DisableOutput();
+  
+  /* Setting the pins related to power on */
+  HAL_GPIO_WritePin(POWER_GPIO_PORT,    POWER_PIN,      GPIO_PIN_SET);
+  HAL_GPIO_WritePin(STANDBY_GPIO_PORT,  STANDBY_PIN,    GPIO_PIN_SET);
+  HAL_GPIO_WritePin(CS_GPIO_PORT,       CS_PIN,         GPIO_PIN_SET);
+  HAL_Delay(25);
+  
+  /* Make the camera be ready */
+  BSP_CAMERA_Standby();
+}
+
+void BSP_CAMERA_PowerOff(void)
+{
+  /* Make the camera standby */
+  BSP_CAMERA_Standby();
+  
+  /* Disable the output of the camera module */
+  BSP_CAMERA_DisableOutput();
+  
+  /* Disable the power */
+  HAL_GPIO_WritePin(POWER_GPIO_PORT,    POWER_PIN,      GPIO_PIN_RESET);
+}
+
+void BSP_CAMERA_Standby(void)
+{
+  /* Set the standby pin to active low */
+  HAL_GPIO_WritePin(STANDBY_GPIO_PORT,  STANDBY_PIN,    GPIO_PIN_RESET);
+}
+
+void BSP_CAMERA_WakeUp(void)
+{
+  /* Set the standby pin to active high */
+  HAL_GPIO_WritePin(STANDBY_GPIO_PORT,  STANDBY_PIN,    GPIO_PIN_SET);
+  HAL_Delay(5);
+}
+
+uint8_t BSP_CAMERA_IsOn(void)
+{
+  return HAL_GPIO_ReadPin(POWER_GPIO_PORT, POWER_PIN);
+}
+
+uint8_t BSP_CAMERA_IsAwake(void)
+{
+  return HAL_GPIO_ReadPin(STANDBY_GPIO_PORT, STANDBY_PIN);
+}
+
+void BSP_CAMERA_EnableOutput(void)
+{
+  /* Set the cs pin to active low */
+  HAL_GPIO_WritePin(CS_GPIO_PORT,       CS_PIN,         GPIO_PIN_SET);
+}
+
+void BSP_CAMERA_DisableOutput(void)
+{
+  /* Set the cs pin to active high */
+  HAL_GPIO_WritePin(CS_GPIO_PORT,       CS_PIN,         GPIO_PIN_RESET);
+}
+#endif
+
+uint16_t BSP_CAMERA_GetVersion(void)
+{
+  /* Read the version of the camera module */
+  return MT9M111_ReadVersion();
 }
 
 /**
@@ -244,74 +298,6 @@ uint8_t BSP_CAMERA_Stop(void)
 }
 
 /**
-  * @brief  Configures the camera contrast and brightness.
-  * @param  contrast_level: Contrast level
-  *          This parameter can be one of the following values:
-  *            @arg  CAMERA_CONTRAST_LEVEL4: for contrast +2
-  *            @arg  CAMERA_CONTRAST_LEVEL3: for contrast +1
-  *            @arg  CAMERA_CONTRAST_LEVEL2: for contrast  0
-  *            @arg  CAMERA_CONTRAST_LEVEL1: for contrast -1
-  *            @arg  CAMERA_CONTRAST_LEVEL0: for contrast -2
-  * @param  brightness_level: Contrast level
-  *          This parameter can be one of the following values:
-  *            @arg  CAMERA_BRIGHTNESS_LEVEL4: for brightness +2
-  *            @arg  CAMERA_BRIGHTNESS_LEVEL3: for brightness +1
-  *            @arg  CAMERA_BRIGHTNESS_LEVEL2: for brightness  0
-  *            @arg  CAMERA_BRIGHTNESS_LEVEL1: for brightness -1
-  *            @arg  CAMERA_BRIGHTNESS_LEVEL0: for brightness -2    
-  * @retval None
-  */
-void BSP_CAMERA_ContrastBrightnessConfig(uint32_t contrast_level, uint32_t brightness_level)
-{
-#if 0 // FIXME - Define this function later
-  if(camera_drv->Config != NULL)
-  {
-    camera_drv->Config(MT9M111_I2C_ADDRESS, CAMERA_CONTRAST_BRIGHTNESS, contrast_level, brightness_level);
-  }  
-#endif
-}
-
-/**
-  * @brief  Configures the camera white balance.
-  * @param  Mode: black_white mode
-  *          This parameter can be one of the following values:
-  *            @arg  CAMERA_BLACK_WHITE_BW
-  *            @arg  CAMERA_BLACK_WHITE_NEGATIVE
-  *            @arg  CAMERA_BLACK_WHITE_BW_NEGATIVE
-  *            @arg  CAMERA_BLACK_WHITE_NORMAL       
-  * @retval None
-  */
-void BSP_CAMERA_BlackWhiteConfig(uint32_t Mode)
-{
-#if 0 // FIXME - Define this function later
-  if(camera_drv->Config != NULL)
-  {
-    camera_drv->Config(MT9M111_I2C_ADDRESS, CAMERA_BLACK_WHITE, Mode, 0);
-  }
-#endif
-}
-
-/**
-  * @brief  Configures the camera color effect.
-  * @param  Effect: Color effect
-  *          This parameter can be one of the following values:
-  *            @arg  CAMERA_COLOR_EFFECT_ANTIQUE               
-  *            @arg  CAMERA_COLOR_EFFECT_BLUE        
-  *            @arg  CAMERA_COLOR_EFFECT_GREEN    
-  *            @arg  CAMERA_COLOR_EFFECT_RED        
-  * @retval None
-  */
-void BSP_CAMERA_ColorEffectConfig(uint32_t Effect)
-{
-#if 0 // FIXME - Define this function later
-  if(camera_drv->Config != NULL)
-  {
-    camera_drv->Config(MT9M111_I2C_ADDRESS, CAMERA_COLOR_EFFECT, Effect, 0);
-  }
-#endif
-}
-
-/**
   * @brief  Handles DCMI interrupt request.
   * @param  None
   * @retval None
@@ -329,6 +315,85 @@ void BSP_CAMERA_IRQHandler(void)
 void BSP_CAMERA_DMA_IRQHandler(void) 
 {
   HAL_DMA_IRQHandler(hdcmi_disco.DMA_Handle);
+}
+
+/**
+  * If the source code enables the camera power control function,
+  * then, these functions will be enabled by the feature.
+  */
+#ifdef  CAMERA_POWER_CONTROL
+/**
+  * @brief  Initialize the power of the module.
+  * @param  None.
+  * @retval None.
+  */
+static void BSP_CAMERA_Init_Power(void)
+{
+
+  GPIO_InitTypeDef  GPIO_InitStruct;
+  
+  /* Configure the GPIO port */
+  POWER_GPIO_CLK_ENABLE();
+  STANDBY_GPIO_CLK_ENABLE();
+  CS_GPIO_CLK_ENABLE();
+
+  /* Configure the GPIO pins */
+  GPIO_InitStruct.Pin = POWER_PIN | STANDBY_PIN | CS_PIN;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+  
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  
+  /* Camera Power on */
+  BSP_CAMERA_PowerOn();
+}
+#endif
+
+/**
+  * @brief  Initialize the I/O lines for the module.
+  * @param  None.
+  * @retval None.
+  */
+static void BSP_CAMERA_Init_IO(void)
+{
+  CAMERA_IO_Init();
+}
+
+/**
+  * @brief  Initilize the DCMI interface for the module.
+  * @param  None.
+  * @retval None.
+  */
+static void BSP_CAMERA_Init_DCMI(void)
+{
+  DCMI_HandleTypeDef *phdcmi;
+    
+  /* Get the DCMI handle structure */
+  phdcmi = &hdcmi_disco;
+  
+  /* DCMI configuration */
+  phdcmi->Init.CaptureRate      = DCMI_CR_ALL_FRAME;  
+  phdcmi->Init.HSPolarity       = DCMI_HSPOLARITY_LOW;
+  phdcmi->Init.SynchroMode      = DCMI_SYNCHRO_HARDWARE;
+  phdcmi->Init.VSPolarity       = DCMI_VSPOLARITY_LOW;
+  phdcmi->Init.ExtendedDataMode = DCMI_EXTEND_DATA_8B;
+  phdcmi->Init.PCKPolarity      = DCMI_PCKPOLARITY_RISING;
+  phdcmi->Instance              = DCMI;  
+  HAL_DCMI_Init(phdcmi);
+
+  /* DCMI Initialization */
+  DCMI_MspInit();
+}
+
+/**
+  * @brief  Initialize the sensor module.
+  * @param  None.
+  * @retval None.
+  */
+static void BSP_SENSOR_Init_Sensor(void)
+{
+  // TODO
 }
 
 /**
@@ -520,8 +585,7 @@ static void DCMI_MspDeInit(void)
   HAL_GPIO_DeInit( GPIOC, GPIO_PIN_6 | GPIO_PIN_7 );
   HAL_GPIO_DeInit( GPIOD, GPIO_PIN_3 );
   HAL_GPIO_DeInit( GPIOE, GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6 );
-  HAL_GPIO_DeInit( GPIOG, GPIO_PIN_10 | GPIO_PIN_11 );
-  
+  HAL_GPIO_DeInit( GPIOG, GPIO_PIN_10 | GPIO_PIN_11 ); 
 }
 
 /**
@@ -610,6 +674,7 @@ __weak void BSP_CAMERA_ErrorCallback(void)
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_DCMI_ErrorCallback could be implemented in the user file
    */
+  UB_UART_Debug("ERROR: DCMI Error Occured");
 }
 
 /**

@@ -85,8 +85,9 @@ int main(void)
      */
   HAL_Init();
 
-  /* Configure LED3 */
+  /* Configure LED3,4 */
   BSP_LED_Init(LED3);
+  BSP_LED_Init(LED4);
   
   /* Configure KEY Button */
   BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
@@ -113,37 +114,76 @@ int main(void)
   }
 
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("UART/USART Initialization Done.\n")!= HAL_OK)
+  if(UB_UART_Debug("Initialization Done: UART/USART.\n")!= HAL_OK)
   {
     Error_Handler();
   }
+#endif
+  
+  /* Configure the memory for storing captured image:
+      - If it uses internal SDRAM, then enable the memory
+      - If is uses external SRAM, then enable the memory module */
+#ifdef  USE_INTERNAL_SDRAM
+  /* Initialize the internal SDRAM */
+  BSP_SDRAM_Init();
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Initialization Done: SDRAM(Internal).\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* For testing the initialized memory */
+  *(__IO uint32_t*) (CAMERA_FRAME_BUFFER) = 0x1234ABCD;
+  uint32_t read_value = *(__IO uint32_t*) (CAMERA_FRAME_BUFFER);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" SDRAM: Check the data = 0x%X.\n", read_value)!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+#elif   USE_EXTERNAL_SRAM
+  /* Initialize the external SRAM */
+  // TODO - 
 #endif
   
   /* Output HSE divided by 4 on MCO1 pin(PA8) */ 
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_4);
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("MCO1(PA8) Initialization Done for Cam MCLK.\n")!= HAL_OK)
+  if(UB_UART_Debug("Initialization Done: Camera MCLK - MCO1(PA8).\n")!= HAL_OK)
   {
     Error_Handler();
   }
 #endif
 
   /* Initialize the Camera */
-  BSP_CAMERA_Init(RESOLUTION_R320x240);
+  BSP_CAMERA_Init();
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("MT9M111 Camera Module Initialization Done.\n")!= HAL_OK)
+  if(UB_UART_Debug("Initialization Done: MT9M111 Camera Module.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif  
+
+  /* For testing the initialized module */
+  uint16_t version = BSP_CAMERA_GetVersion();
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" MT9M111: Camera Module Version = 0x%X.\n", version)!= HAL_OK)
   {
     Error_Handler();
   }
 #endif  
   
   /* Start the Camera Capture */
-  // FIXME(buffer) - BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
+  BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("MT9M111 Capturing Started with Continuous Mode.\n")!= HAL_OK)
+  if(UB_UART_Debug(" MT9M111: Capturing Started with Continuous Mode.\n")!= HAL_OK)
   {
     Error_Handler();
   }
