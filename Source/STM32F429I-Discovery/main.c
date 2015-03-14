@@ -144,9 +144,27 @@ int main(void)
     Error_Handler();
   }
 #endif
-#elif   USE_EXTERNAL_SRAM
+#elif defined USE_EXTERNAL_SRAM
   /* Initialize the external SRAM */
-  // TODO - 
+  BSP_SRAM_Init();
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Initialization Done: SRAM(External).\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* For testing the initialized memory */
+  BSP_SRAM_Write(0x00, 0xABCD);
+  uint16_t read_value = BSP_SRAM_Read(0x00);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" SRAM: Check the data = 0x%X.\n", read_value)!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
 #endif
   
   /* Output HSE divided by 4 on MCO1 pin(PA8) */ 

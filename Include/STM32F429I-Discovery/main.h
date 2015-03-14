@@ -44,6 +44,7 @@
 #include "stm32f429i_discovery.h"
 #include "stm32f429i_discovery_camera.h"
 #include "stm32f429i_discovery_sdram.h"
+#include "stm32f429i_discovery_sram.h"
 
 /* Includes User-defined headers */
 #include "ub_timer.h"
@@ -52,12 +53,12 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 #define USE_INTERNAL_SDRAM
-// #define USE_EXTERNAL_SRAM
+//#define USE_EXTERNAL_SRAM
 
 /* Camera Frame Buffer Address */
 #ifdef  USE_INTERNAL_SDRAM
   #define CAMERA_FRAME_BUFFER     0xD0000000
-#elif   USE_EXTERNAL_SRAM
+#elif defined USE_EXTERNAL_SRAM
   #define CAMERA_FRAME_BUFFER     0x64000000    // Use Bank-2
 #endif
 

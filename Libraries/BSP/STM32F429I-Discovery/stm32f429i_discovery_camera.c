@@ -259,7 +259,6 @@ void BSP_CAMERA_Suspend(void)
   __HAL_DMA_DISABLE(hdcmi_disco.DMA_Handle);
   /* Disable the DCMI */
   __HAL_DCMI_DISABLE(&hdcmi_disco);
-  
 }
 
 /**
@@ -469,10 +468,10 @@ static void DCMI_MspInit(void)
     *   PC7   ----> DCMI_D1
     *   PG10  ----> DCMI_D2
     *   PG11  ----> DCMI_D3
-    *   PE3   ----> DCMI_D4
+    *   PE4   ----> DCMI_D4
     *   PD3   ----> DCMI_D5
-    *   PE6   ----> DCMI_D6
-    *   PE7   ----> DCMI_D7
+    *   PE5   ----> DCMI_D6
+    *   PE6   ----> DCMI_D7
     *
     *   PA6   ----> DCMI_PCLK
     *   PA4   ----> DCMI_HREF (HSYNC)
@@ -506,7 +505,7 @@ static void DCMI_MspInit(void)
   GPIO_Init_Structure.Alternate = GPIO_AF13_DCMI;   
   HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
 
-  GPIO_Init_Structure.Pin       = GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6; 
+  GPIO_Init_Structure.Pin       = GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6; 
   GPIO_Init_Structure.Mode      = GPIO_MODE_AF_PP;
   GPIO_Init_Structure.Pull      = GPIO_PULLUP;
   GPIO_Init_Structure.Speed     = GPIO_SPEED_HIGH;
@@ -571,10 +570,10 @@ static void DCMI_MspDeInit(void)
     *   PC7   ----> DCMI_D1
     *   PG10  ----> DCMI_D2
     *   PG11  ----> DCMI_D3
-    *   PE3   ----> DCMI_D4
+    *   PE4   ----> DCMI_D4
     *   PD3   ----> DCMI_D5
-    *   PE6   ----> DCMI_D6
-    *   PE7   ----> DCMI_D7
+    *   PE5   ----> DCMI_D6
+    *   PE6   ----> DCMI_D7
     *
     *   PA6   ----> DCMI_PCLK
     *   PA4   ----> DCMI_HREF (HSYNC)
@@ -584,7 +583,7 @@ static void DCMI_MspDeInit(void)
   HAL_GPIO_DeInit( GPIOB, GPIO_PIN_7 );
   HAL_GPIO_DeInit( GPIOC, GPIO_PIN_6 | GPIO_PIN_7 );
   HAL_GPIO_DeInit( GPIOD, GPIO_PIN_3 );
-  HAL_GPIO_DeInit( GPIOE, GPIO_PIN_3 | GPIO_PIN_5 | GPIO_PIN_6 );
+  HAL_GPIO_DeInit( GPIOE, GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 );
   HAL_GPIO_DeInit( GPIOG, GPIO_PIN_10 | GPIO_PIN_11 ); 
 }
 
