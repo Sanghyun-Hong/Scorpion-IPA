@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    Templates/Src/main.c 
-  * @author  MCD Application Team
-  * @version V1.2.0
-  * @date    26-December-2014
+  * @file    Source/main.c 
+  * @author  Hong, Sanghyun
+  * @version V0.1.0
+  * @date    17-March-2015
   * @brief   Main program body
   ******************************************************************************
   * @attention
@@ -42,10 +42,6 @@
   * @{
   */
 
-/** @addtogroup Templates
-  * @{
-  */
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* A flag for enabling debugging messages in main */
@@ -58,8 +54,18 @@
 /* Counter Prescaler value */
 uint32_t uhPrescalerValue = 0;
 
+/* USB Device Handler for Camera Module */
+#ifdef  USE_CAMERA_USB
+  USBH_HandleTypeDef hUSBHost;
+  VIDEO_ApplicationTypeDef Appli_state = APPLICATION_IDLE;
+#endif
+
 /* Private function prototypes -----------------------------------------------*/
-static void SavePicture(void);
+#ifdef  USE_CAMERA_DCMI
+  static void SavePicture(void);
+#elif   defined USE_CAMERA_USB
+  static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
+#endif
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
@@ -167,6 +173,17 @@ int main(void)
 #endif
 #endif
   
+  /* Configure the camera for capturing image:
+      - If it uses DCMI interface, then enabling DCMI interface
+      - If is uses USB interface, then enabling UVC interface */
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
+  
+  /** This Section is for the DCMI camera interface
+    *   - Initialize the master clock (mclk).
+    *   - Initialize the camera module.
+    *   - Start the module with continuous mode.
+    */
+  
   /* Output HSE divided by 4 on MCO1 pin(PA8) */ 
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_4);
   
@@ -207,6 +224,47 @@ int main(void)
   }
 #endif
   
+#elif defined USE_CAMERA_USB    // USE USB interface ///////////////////////////
+  
+  /** This Section is for the USB camera interface
+    *   - Initialize the USB host device driver.
+    *   - Register the USB host device class.
+    *   - Register the USB camera video class.
+    *   - Start the USB camera device.
+    */
+  
+  /* Init Device Library */
+  USBH_Init(&hUSBHost, USBH_UserProcess, 0);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Initialization Done: UVC Camera as an USB device.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif 
+  
+  /* Add Supported Class */
+  USBH_RegisterClass(&hUSBHost, USBH_VIDEO_CLASS);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" UVC Camera: Register Class.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* Start Device Process */
+  USBH_Start(&hUSBHost);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" UVC Camera: Start the process.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+#endif                          ////////////////////////////////////////////////
+  
   /**
     * Execute user-defined code, which are enlisted below
     */
@@ -227,8 +285,20 @@ int main(void)
     }
     while (BSP_PB_GetState(BUTTON_KEY) == SET);
     
+    /* Capture images by using the camera:
+      - SavePicture(): Use the DCMI interface
+      - USBH_Process(): Use the USB interface */
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
+    
     /* Capture the Camera image in here */
     SavePicture();
+    
+#elif   defined USB_CAMERA_USB  // USE USB interface ///////////////////////////
+    
+    /* USB Host Background task */
+    USBH_Process(&hUSBHost);
+    
+#endif                          ////////////////////////////////////////////////
     
     /* Turn LED3 on: Success capture */
     BSP_LED_Off(LED3);
@@ -244,6 +314,8 @@ int main(void)
 #endif
   }
 }
+
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
 
 /**
   * @brief  Frame Event callback.
@@ -271,6 +343,41 @@ static void SavePicture(void)
   /* Resume the camera capture */
   BSP_CAMERA_Resume();
 }
+
+#elif   defined USE_CAMERA_USB  // USE USB interface ///////////////////////////
+
+/**
+  * @brief  User Process
+  * @param  phost: Host Handle
+  * @param  id: Host Library user message ID
+  * @retval None
+  */
+static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
+{
+  switch(id)
+  { 
+  case HOST_USER_SELECT_CONFIGURATION:
+    break;
+    
+  case HOST_USER_DISCONNECTION:
+    Appli_state = APPLICATION_DISCONNECT;
+    
+    break;
+    
+  case HOST_USER_CLASS_ACTIVE:
+    Appli_state = APPLICATION_READY;
+    break;
+    
+  case HOST_USER_CONNECTION:
+    Appli_state = APPLICATION_START;
+    break;
+
+  default:
+    break; 
+  }
+}
+
+#endif                          ////////////////////////////////////////////////
 
 /**
   * @brief  System Clock Configuration

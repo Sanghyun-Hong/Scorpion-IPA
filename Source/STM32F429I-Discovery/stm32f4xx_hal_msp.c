@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Templates/Src/stm32f4xx_hal_msp.c
+  * @file    Source/stm32f4xx_hal_msp.c
   * @author  MCD Application Team
   * @version V1.2.0
   * @date    26-December-2014

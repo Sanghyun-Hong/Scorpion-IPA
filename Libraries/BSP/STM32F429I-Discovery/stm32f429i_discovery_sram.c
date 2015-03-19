@@ -84,10 +84,6 @@ static FMC_NORSRAM_TimingTypeDef Timing;
 /** @defgroup STM32F429I_DISCOVERY_SRAM_Private_Function_Prototypes
   * @{
   */ 
-static void MspInit(void);
-/**
-  * @}
-  */
 
 /** @defgroup STM32F429I_DISCOVERY_SRAM_Private_Functions
   * @{

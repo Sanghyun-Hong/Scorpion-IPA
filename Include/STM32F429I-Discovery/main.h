@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    Templates/Inc/main.h 
-  * @author  MCD Application Team
-  * @version V1.2.0
-  * @date    26-December-2014
+  * @file    Include/main.h 
+  * @author  Hong, Sanghyun
+  * @version V0.1.0
+  * @date    17-March-2015
   * @brief   Header for main.c module
   ******************************************************************************
   * @attention
@@ -50,8 +50,15 @@
 #include "ub_timer.h"
 #include "ub_uart.h"
 
+/* Includes USB headers */
+#include "usbh_core.h"
+#include "usbh_video.h"
+
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
+/**
+  * Memory Type
+  */
 #define USE_INTERNAL_SDRAM
 //#define USE_EXTERNAL_SRAM
 
@@ -60,6 +67,24 @@
   #define CAMERA_FRAME_BUFFER     0xD0000000
 #elif defined USE_EXTERNAL_SRAM
   #define CAMERA_FRAME_BUFFER     0x64000000    // Use Bank-2
+#endif
+
+/**
+  * Camera Type
+  */
+//#define USE_CAMERA_DCMI
+#define USE_CAMERA_USB
+
+/* Camera USB host device handle */
+#ifdef  USE_CAMERA_USB
+  typedef enum {
+    APPLICATION_IDLE = 0,  
+    APPLICATION_START,   
+    APPLICATION_READY,
+    APPLICATION_DISCONNECT,
+  }VIDEO_ApplicationTypeDef;
+    
+  extern USBH_HandleTypeDef hUSBHost;
 #endif
 
 /* Exported macro ------------------------------------------------------------*/

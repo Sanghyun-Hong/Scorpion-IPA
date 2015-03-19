@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Templates/Src/stm32f4xx_it.c 
+  * @file    Source/stm32f4xx_it.c 
   * @author  MCD Application Team
   * @version V1.2.0
   * @date    26-December-2014
@@ -45,7 +45,7 @@
   * @{
   */
 
-/** @addtogroup Templates
+/** @addtogroup templates
   * @{
   */
 
@@ -55,6 +55,9 @@
 /* Private variables ---------------------------------------------------------*/
 /* UART handler declared in "main.c" file */
 extern UART_HandleTypeDef UartHandle;
+
+/* USB-OTG-FS/HS handler declared in "usbh_conf.c" file */
+extern HCD_HandleTypeDef hhcd;
 
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
@@ -179,7 +182,16 @@ void USARTx_IRQHandler(void)
   HAL_UART_IRQHandler(& UartHandle);
 }
 
-#if 0 // FIXME
+/**
+  * @brief  This function handles USB-On-The-Go FS/HS global interrupt request.
+  * @param  None
+  * @retval None
+  */
+void OTG_HS_IRQHandler(void)
+{
+  HAL_HCD_IRQHandler(&hhcd);
+}
+
 /**
   * @brief  This function handles DMA2 Stream1 Handler.
   * @param  None
@@ -199,7 +211,6 @@ void DCMI_IRQHandler(void)
 {
   BSP_CAMERA_IRQHandler();
 }
-#endif
 
 /**
   * @brief  This function handles PPP interrupt request.
