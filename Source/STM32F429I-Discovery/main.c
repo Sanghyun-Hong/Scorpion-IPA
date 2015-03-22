@@ -296,7 +296,7 @@ int main(void)
 #elif   defined USB_CAMERA_USB  // USE USB interface ///////////////////////////
     
     /* USB Host Background task */
-    USBH_Process(&hUSBHost);
+    // FIXME - USBH_Process(&hUSBHost);
     
 #endif                          ////////////////////////////////////////////////
     

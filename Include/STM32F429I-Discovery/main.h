@@ -82,7 +82,7 @@
     APPLICATION_START,   
     APPLICATION_READY,
     APPLICATION_DISCONNECT,
-  }VIDEO_ApplicationTypeDef;
+  } VIDEO_ApplicationTypeDef;
     
   extern USBH_HandleTypeDef hUSBHost;
 #endif

@@ -117,8 +117,39 @@ USBH_ClassTypeDef  VIDEO_Class =
   */
 static USBH_StatusTypeDef USBH_VIDEO_InterfaceInit (USBH_HandleTypeDef *phost)
 {	
-
-  return USBH_OK;
+  USBH_StatusTypeDef status = USBH_FAIL ;
+  USBH_StatusTypeDef out_status, in_status ;    
+  VIDEO_HandleTypeDef *VIDEO_Handle;
+  uint8_t  interface, index;
+  uint16_t ep_size_out = 0;
+  uint16_t ep_size_in = 0;  
+  
+  interface = USBH_FindInterface(phost, USB_VIDEO_CLASS, USB_SUBCLASS_VIDEO_CONTROL, 0x00);
+  
+  if(interface == 0xFF) // Invalid Interface
+  {
+    status = USBH_FAIL;
+  }
+  else 
+  {
+    phost->pActiveClass->pData = (VIDEO_HandleTypeDef *) USBH_malloc(sizeof(VIDEO_HandleTypeDef));
+    VIDEO_Handle = (VIDEO_HandleTypeDef *) phost->pActiveClass->pData;
+    USBH_memset(VIDEO_Handle, 0, sizeof(VIDEO_HandleTypeDef));
+    
+    // Find Video Classes
+    /*out_status = USBH_Video_FindVideoStreamingOUT(phost); 
+    in_status = USBH_Video_FindVideoStreamingIN(phost);*/
+    
+    if( !(out_status == USBH_FAIL 
+          && in_status == USBH_FAIL) ) 
+    {
+      
+    }
+    
+    // FIXME
+  }
+  
+  return status;
 }
 
 
