@@ -131,14 +131,14 @@ static USBH_StatusTypeDef USBH_VIDEO_InterfaceInit (USBH_HandleTypeDef *phost)
     status = USBH_FAIL;
   }
   else 
-  {
-    phost->pActiveClass->pData = (VIDEO_HandleTypeDef *) USBH_malloc(sizeof(VIDEO_HandleTypeDef));
+  {   
+    phost->pActiveClass->pData = (VIDEO_HandleTypeDef *)USBH_malloc (sizeof(VIDEO_HandleTypeDef));
     VIDEO_Handle = (VIDEO_HandleTypeDef *) phost->pActiveClass->pData;
     USBH_memset(VIDEO_Handle, 0, sizeof(VIDEO_HandleTypeDef));
     
-    // Find Video Classes
-    /*out_status = USBH_Video_FindVideoStreamingOUT(phost); 
-    in_status = USBH_Video_FindVideoStreamingIN(phost);*/
+    /* 1st Step: Find Video Interface */
+    //out_status = USBH_Video_FindVideoStreamingOUT(phost); 
+    //in_status = USBH_Video_FindVideoStreamingIN(phost);
     
     if( !(out_status == USBH_FAIL 
           && in_status == USBH_FAIL) ) 
@@ -146,13 +146,12 @@ static USBH_StatusTypeDef USBH_VIDEO_InterfaceInit (USBH_HandleTypeDef *phost)
       
     }
     
-    // FIXME
+    /* Initialization done */
+    status = USBH_OK;
   }
   
   return status;
 }
-
-
 
 /**
   * @brief  USBH_VIDEO_InterfaceDeInit 
@@ -165,6 +164,38 @@ USBH_StatusTypeDef USBH_VIDEO_InterfaceDeInit (USBH_HandleTypeDef *phost)
 
   return USBH_OK;
 }
+
+/*
+static USBH_StatusTypeDef USBH_VIDEO_FindVideoStreamingIN(USBH_HandleTypeDef *phost)
+{
+  uint8_t interface, alt_settings;
+  USBH_StatusTypeDef status = USBH_FAIL;
+  VIDEO_HandleTypeDef *VIDEO_Handle;
+  
+  VIDEO_Handle = (VIDEO_HandleTypeDef *) phost->pActiveClass->pData;
+  
+  // Look for Video Streaming In interface
+  alt_settings = 0;
+  for (interface = 0; interface < USBH_MAX_NUM_INTERFACES; interface++) {
+    if((phost->device.CfgDesc.Itf_Desc[interface].bInterfaceClass == USB_VIDEO_CLASS) &&
+       (phost->device.CfgDesc.Itf_Desc[interface].bInterfaceSubClass == USB_SUBCLASS_VIDEO_STREAMING))
+    {
+      if((phost->device.CfgDesc.Itf_Desc[interface].Ep_Desc[0].bEndpointAddress & 0x80) &&
+         (phost->device.CfgDesc.Itf_Desc[interface].Ep_Desc[0].wMaxPacketSize > 0))
+      {
+        
+        alt_settings++;
+      } // Endpoint and packet size
+    }   // Interface class and subclass
+  }
+  
+  if(alt_settings > 0) {
+    status = USBH_OK;
+  }
+  
+  return status;
+}
+*/
 
 /**
   * @brief  USBH_VIDEO_ClassRequest 

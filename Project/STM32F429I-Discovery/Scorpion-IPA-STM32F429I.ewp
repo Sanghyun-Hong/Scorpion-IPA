@@ -964,6 +964,12 @@
     </file>
   </group>
   <group>
+    <name>EWARM</name>
+    <file>
+      <name>$PROJ_DIR$\startup_stm32f429xx.s</name>
+    </file>
+  </group>
+  <group>
     <name>STM32_USBH_Library</name>
     <group>
       <name>Class</name>
