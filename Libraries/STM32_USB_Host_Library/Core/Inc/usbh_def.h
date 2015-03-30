@@ -442,7 +442,7 @@ typedef struct
   USBH_StatusTypeDef  (*DeInit)      (struct _USBH_HandleTypeDef *phost);
   USBH_StatusTypeDef  (*Requests)    (struct _USBH_HandleTypeDef *phost);  
   USBH_StatusTypeDef  (*BgndProcess) (struct _USBH_HandleTypeDef *phost);
-  USBH_StatusTypeDef  (*SOFProcess) (struct _USBH_HandleTypeDef *phost);  
+  USBH_StatusTypeDef  (*SOFProcess)  (struct _USBH_HandleTypeDef *phost);  
   void*                pData;
 } USBH_ClassTypeDef;
 

@@ -75,7 +75,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(HOST_POWERSW_PORT,&GPIO_InitStruct);
+  HAL_GPIO_Init(HOST_POWERSW_PORT, &GPIO_InitStruct);
   
   /* By Default, DISABLE is needed on output of the Power Switch */
   HAL_GPIO_WritePin(HOST_POWERSW_PORT, HOST_POWERSW_VBUS, GPIO_PIN_SET);
@@ -88,6 +88,7 @@ void HAL_HCD_MspInit(HCD_HandleTypeDef *hhcd)
   /* Enable USBFS Interrupt */
   HAL_NVIC_EnableIRQ(OTG_HS_IRQn);
 }
+
 /**
   * @brief  DeInitializes the HCD MSP.
   * @param  hhcd: HCD handle

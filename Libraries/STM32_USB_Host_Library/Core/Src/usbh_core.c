@@ -401,7 +401,7 @@ USBH_StatusTypeDef  USBH_Process(USBH_HandleTypeDef *phost)
   
   switch (phost->gState)
   {
-  case HOST_IDLE :
+  case HOST_IDLE:
     
     if (phost->device.is_connected)  
     {
@@ -418,7 +418,7 @@ USBH_StatusTypeDef  USBH_Process(USBH_HandleTypeDef *phost)
   case HOST_DEV_WAIT_FOR_ATTACHMENT:
     break;    
     
-  case HOST_DEV_ATTACHED :
+  case HOST_DEV_ATTACHED:
     
     USBH_UsrLog("USB Device Attached");  
       

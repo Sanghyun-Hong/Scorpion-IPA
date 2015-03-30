@@ -83,11 +83,11 @@
 * @{
 */ 
 
-static USBH_StatusTypeDef USBH_VIDEO_InterfaceInit  (USBH_HandleTypeDef *phost);
-static USBH_StatusTypeDef USBH_VIDEO_InterfaceDeInit  (USBH_HandleTypeDef *phost);
+static USBH_StatusTypeDef USBH_VIDEO_InterfaceInit(USBH_HandleTypeDef *phost);
+static USBH_StatusTypeDef USBH_VIDEO_InterfaceDeInit(USBH_HandleTypeDef *phost);
 static USBH_StatusTypeDef USBH_VIDEO_Process(USBH_HandleTypeDef *phost);
-static USBH_StatusTypeDef USBH_VIDEO_ClassRequest (USBH_HandleTypeDef *phost);
-
+static USBH_StatusTypeDef USBH_VIDEO_ClassRequest(USBH_HandleTypeDef *phost);
+static USBH_StatusTypeDef USBH_VIDEO_SOFProcess(USBH_HandleTypeDef *phost);
 
 USBH_ClassTypeDef  VIDEO_Class = 
 {
@@ -97,7 +97,7 @@ USBH_ClassTypeDef  VIDEO_Class =
   USBH_VIDEO_InterfaceDeInit,
   USBH_VIDEO_ClassRequest,
   USBH_VIDEO_Process,
-  NULL,                         // The SOF pin is not used
+  USBH_VIDEO_SOFProcess,
   NULL,                         // The data pointer is not used
 };
 /**
@@ -223,6 +223,33 @@ static USBH_StatusTypeDef USBH_VIDEO_Process (USBH_HandleTypeDef *phost)
   return USBH_OK;
 }
 
+/**
+  * @brief  USBH_VIDEO_SOFProcess 
+  *         The function is for SOF state
+  * @param  phost: Host handle
+  * @retval USBH Status
+  */
+// Just a Test Code ///////////////
+#include "stm32f429i_discovery.h"
+static USBH_StatusTypeDef USBH_VIDEO_SOFProcess(USBH_HandleTypeDef *phost)
+{
+  
+  // Just a Test Code ///////////////
+  static uint8_t toggle = 0;
+  if(toggle)
+  {
+    BSP_LED_Off(LED4);
+    toggle = 0;
+  }
+  else 
+  {
+    BSP_LED_On(LED4);
+    toggle = 1;
+  }
+  // Just a Test Code ///////////////
+  
+  return USBH_OK;
+}
 
 /**
   * @brief  USBH_VIDEO_Init 

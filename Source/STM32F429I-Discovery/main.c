@@ -65,6 +65,7 @@ uint32_t uhPrescalerValue = 0;
   static void SavePicture(void);
 #elif   defined USE_CAMERA_USB
   static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
+  static void SavePicture_Process(void);
 #endif
 static void SystemClock_Config(void);
 static void Error_Handler(void);
@@ -129,7 +130,7 @@ int main(void)
   /* Configure the memory for storing captured image:
       - If it uses internal SDRAM, then enable the memory
       - If is uses external SRAM, then enable the memory module */
-#ifdef  USE_INTERNAL_SDRAM
+#ifdef  USE_INTERNAL_SDRAM      // USE_INTERNAL_SDRAM //////////////////////////
   /* Initialize the internal SDRAM */
   BSP_SDRAM_Init();
   
@@ -150,7 +151,8 @@ int main(void)
     Error_Handler();
   }
 #endif
-#elif defined USE_EXTERNAL_SRAM
+  
+#elif defined USE_EXTERNAL_SRAM // USE_EXTERNAL_SRAM ///////////////////////////
   /* Initialize the external SRAM */
   BSP_SRAM_Init();
   
@@ -171,7 +173,8 @@ int main(void)
     Error_Handler();
   }
 #endif
-#endif
+  
+#endif  ////////////////////////////////////////////////////////////////////////
   
   /* Configure the camera for capturing image:
       - If it uses DCMI interface, then enabling DCMI interface
@@ -263,13 +266,18 @@ int main(void)
   }
 #endif
   
-#endif                          ////////////////////////////////////////////////
+#endif   ///////////////////////////////////////////////////////////////////////
   
   /**
     * Execute user-defined code, which are enlisted below
     */
   while (1)
   {
+    /* Capture images by using the camera:
+      - SavePicture(): Use the DCMI interface
+      - USBH_Process(): Use the USB interface */
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
+    
     /* Turn LED3 off */
     BSP_LED_Off(LED3);
     
@@ -285,32 +293,30 @@ int main(void)
     }
     while (BSP_PB_GetState(BUTTON_KEY) == SET);
     
-    /* Capture images by using the camera:
-      - SavePicture(): Use the DCMI interface
-      - USBH_Process(): Use the USB interface */
-#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
-    
     /* Capture the Camera image in here */
     SavePicture();
     
-#elif   defined USB_CAMERA_USB  // USE USB interface ///////////////////////////
+    /* Turn LED3 on: Success capture */
+    BSP_LED_Off(LED3);
+    
+#elif defined   USE_CAMERA_USB  // USE USB interface ///////////////////////////
     
     /* USB Host Background task */
     USBH_Process(&hUSBHost);
     
-#endif                          ////////////////////////////////////////////////
+    /* Saving picture with USB camera module */
+    SavePicture_Process();
     
-    /* Turn LED3 on: Success capture */
-    BSP_LED_Off(LED3);
+#endif                          ////////////////////////////////////////////////
     
     /* Delay for another capture */
     HAL_Delay(500);
     
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
+    if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
+    {
+      Error_Handler();
+    }
 #endif
   }
 }
@@ -344,7 +350,7 @@ static void SavePicture(void)
   BSP_CAMERA_Resume();
 }
 
-#elif   defined USE_CAMERA_USB  // USE USB interface ///////////////////////////
+#elif defined   USE_CAMERA_USB  // USE USB interface ///////////////////////////
 
 /**
   * @brief  User Process
@@ -361,7 +367,6 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
     
   case HOST_USER_DISCONNECTION:
     Appli_state = APPLICATION_DISCONNECT;
-    
     break;
     
   case HOST_USER_CLASS_ACTIVE:
@@ -369,11 +374,36 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
     break;
     
   case HOST_USER_CONNECTION:
-    Appli_state = APPLICATION_START;
+    Appli_state = APPLICATION_CONNECT;
     break;
 
   default:
     break; 
+  }
+}
+
+/**
+  * @brief  SavePicture Process
+  * @param  None
+  * @retval None
+  */
+static void SavePicture_Process(void) 
+{
+  switch(Appli_state)
+  {
+  case APPLICATION_IDLE:
+    break;
+  case APPLICATION_READY:
+    break;
+  case APPLICATION_CONNECT:
+    BSP_LED_On(LED3);
+    break;
+  case APPLICATION_DISCONNECT:
+    BSP_LED_Off(LED3);
+    break;
+    
+  default:
+    break;
   }
 }
 
@@ -383,14 +413,14 @@ static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow : 
   *            System Clock source            = PLL (HSE)
-  *            SYSCLK(Hz)                     = 180000000
-  *            HCLK(Hz)                       = 180000000
+  *            SYSCLK(Hz)                     = 168000000
+  *            HCLK(Hz)                       = 168000000
   *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 4
   *            APB2 Prescaler                 = 2
   *            HSE Frequency(Hz)              = 8000000
   *            PLL_M                          = 8
-  *            PLL_N                          = 360
+  *            PLL_N                          = 336
   *            PLL_P                          = 2
   *            PLL_Q                          = 7
   *            VDD(V)                         = 3.3
@@ -418,7 +448,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 360;
+  RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)

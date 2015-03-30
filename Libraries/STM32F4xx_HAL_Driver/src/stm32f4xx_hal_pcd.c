@@ -153,7 +153,7 @@ HAL_StatusTypeDef HAL_PCD_Init(PCD_HandleTypeDef *hpcd)
   /* Disable the Interrupts */
  __HAL_PCD_DISABLE(hpcd);
  
- /*Init the Core (common init.) */
+ /* Init the Core (common init.) */
  USB_CoreInit(hpcd->Instance, hpcd->Init);
  
  /* Force Device Mode*/

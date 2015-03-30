@@ -79,8 +79,8 @@
 #ifdef  USE_CAMERA_USB
   typedef enum {
     APPLICATION_IDLE = 0,  
-    APPLICATION_START,   
     APPLICATION_READY,
+    APPLICATION_CONNECT,
     APPLICATION_DISCONNECT,
   } VIDEO_ApplicationTypeDef;
     
