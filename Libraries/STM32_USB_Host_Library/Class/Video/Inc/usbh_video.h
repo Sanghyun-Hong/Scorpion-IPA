@@ -61,29 +61,7 @@
 
 /** @defgroup USBH_VIDEO_CLASS_Exported_Types
 * @{
-*/ 
-
-
-typedef struct _VIDEO_Process
-{
-  /* FIXME - Later
-  AUDIO_ReqStateTypeDef              req_state;
-  AUDIO_CSReqStateTypeDef            cs_req_state;  
-  AUDIO_PlayStateTypeDef             play_state;  
-  AUDIO_ControlStateTypeDef          control_state; 
-  AUDIO_ProcessingTypeDef            processing_state;
-  
-  AUDIO_STREAMING_IN_HandleTypeDef   stream_in[AUDIO_MAX_AUDIO_STD_INTERFACE];
-  AUDIO_STREAMING_OUT_HandleTypeDef  stream_out[AUDIO_MAX_AUDIO_STD_INTERFACE];
-  AUDIO_ClassSpecificDescTypedef     class_desc;
-  
-  AUDIO_InterfaceStreamPropTypeDef   headphone;
-  AUDIO_InterfaceStreamPropTypeDef   microphone; 
-  AUDIO_InterfaceControlPropTypeDef  control;
-  uint16_t                            mem [8];  
-  uint8_t                            temp_feature;      */ 
-  uint8_t                            temp_channels;
-} VIDEO_HandleTypeDef;
+*/
 
 /* 3.6. Interface Association Descriptor */
 typedef struct {
@@ -326,6 +304,155 @@ typedef struct {
 } VIDEO_VSEndpointDescTypeDef;  // 1.1, 1.2, and 2.1 shares the same format
 
 /* 3.11. String Descriptor (The same as the Standard VC Control Descriptor) */
+
+/* CUSTOM: Number of Class-Specific VS Standard Interface */
+#define VIDEO_MAX_VIDEO_STD_INTERFACE           0x05    // The number is chosed by heuristics
+
+/* CUSTOM: Numver of Class-Specific VS(Video Streaming) Interface Descriptor */
+#define VIDEO_MAX_STREAMING_INTERFACE           0x05    // The number is chosed by heuristics
+
+/* CUSTOM: Number of Class-Specific VC(Video Control) Interface Descriptor */
+#define VIDEO_MAX_NUM_IN_TERMINAL               0x04    // The numbers were chosen by heuristics
+#define VIDEO_MAX_NUM_OUT_TERMINAL              0x04
+#define VIDEO_MAX_NUM_CAMERA_UNIT               0x04
+#define VIDEO_MAX_NUM_SELECTOR_UNIT             0x04
+#define VIDEO_MAX_NUM_PROCESSING_UNIT           0x04
+#define VIDEO_MAX_NUM_ENCODING_UNIT             0x04
+#define VIDEO_MAX_NUM_EXTENSION_UNIT            0x04
+
+/* CUSTOM: Class-Specific VC(Video Control) Interface Descriptor */
+typedef struct {
+  VIDEO_VCClassSpecificDescTypeDef      *HeaderDesc;
+  VIDEO_VCInputTerminalDescTypeDef      *InputTerminalDesc [VIDEO_MAX_NUM_IN_TERMINAL];
+  VIDEO_VCOutputTerminalDescTypeDef     *OutputTerminalDesc[VIDEO_MAX_NUM_OUT_TERMINAL];
+  VIDEO_VCSelectorUnitDescTypeDef       *SelectorUnitDesc  [VIDEO_MAX_NUM_SELECTOR_UNIT];
+  VIDEO_VCProcessingUnitDescTypeDef     *ProcessingUnitDesc[VIDEO_MAX_NUM_PROCESSING_UNIT];
+  VIDEO_VCExtensionUnitDescTypeDef      *ExtensionUnitDesc [VIDEO_MAX_NUM_EXTENSION_UNIT];
+  VIDEO_VCEncodingUnitDescTypeDef       *EncodingUnitDesc  [VIDEO_MAX_NUM_ENCODING_UNIT];
+} VIDEO_VCDescTypeDef;
+
+/* CUSTOM: Class-Specific VS(Video Streaming) Interface Descriptor */
+typedef struct {
+  VIDEO_VSInterfaceCSInputDescTypeDef           *CSInputTypeDesc;
+  VIDEO_VSInterfaceCSOutputDescTypeDef          *CSOutputTypeDesc;
+  // This module does not support Payload and Video Frame Descriptors
+  VIDEO_VSInterfaceStillImageFrameDescTypeDef   *StillImageFrameDesc;
+  VIDEO_VSInterfaceColorMatchingDescTypeDef     *ColorMatchingDesc;
+} VIDEO_VSDescTypeDef;
+
+/* CUSTOM: Class-Specific VC : Global descriptor*/
+typedef struct {
+  
+  VIDEO_VCDescTypeDef   VCDescriptor;
+  VIDEO_VSDescTypeDef   VSDescriptor[VIDEO_MAX_STREAMING_INTERFACE];
+  // The number of each Video Control eescriptors
+  uint16_t              VSNum; 
+  uint16_t              InputTerminalNum;
+  uint16_t              OutputTerminalNum;
+  uint16_t              SelectorUnitNum;
+  uint16_t              ProcessingUnitNum;
+  uint16_t              EncodingUnitNum;
+  uint16_t              ExtensionUnitNum;
+} VIDEO_ClassSpecificDescTypedef;
+
+// FIXME - Under three lines
+#define HEADPHONE_SUPPORTED                     0x01
+#define MICROPHONE_SUPPORTED                    0x02
+#define HEADSET_SUPPORTED                       0x03
+   
+/* CUSTOM: Input/Output Streaming Handler */
+typedef struct {
+  uint8_t               Endpoint;
+  uint16_t              EndpointSize;
+  uint8_t               AltSettings;
+  uint8_t               Interface;
+  uint8_t               Valid;
+  uint8_t               Interval;
+} VIDEO_VSInOutHandleTypeDef;
+
+/* CUSTOM: Input/Output Streaming Properties */
+typedef struct {
+  // Endpoint information
+  uint8_t               Endpoint;
+  uint16_t              EndpointSize; 
+  uint8_t               Interface; 
+  uint8_t               AltSettings;
+  uint8_t               Interval;
+  uint8_t               Pipe;
+  // Supported flag
+  uint8_t               Supported;
+  // Linked features: Input/Output
+  uint8_t               AssociatedChannels;
+  uint8_t               AssociatedTerminal;
+  uint8_t               AssociatedSelector;
+  uint8_t               AssociatedProcessing;
+  uint8_t               AssociatedExtension;
+  uint8_t               AssociatedEncoding;
+  // Linked features: Output
+  uint8_t               AssociatedVideoStream;
+  
+  /*
+  uint32_t             timer ; 
+  
+  uint8_t              asociated_as; 
+  uint8_t              asociated_mixer; 
+  uint8_t              asociated_selector; 
+  uint8_t              asociated_feature; 
+  uint8_t              asociated_terminal;
+  uint8_t              asociated_channels;
+  
+  uint32_t             frequency; 
+  uint8_t              *buf;
+  uint8_t              *cbuf; 
+  uint32_t             partial_ptr; 
+
+  uint32_t             global_ptr;  
+  uint16_t             frame_length;  
+  uint32_t             total_length; 
+  
+  AUDIO_ControlAttributeTypeDef attribute;  
+  */
+} VIDEO_InterfaceStreamTypeDef;
+
+/* CUSTOM: Control Properties */
+typedef struct {
+  uint8_t       Endpoint;
+  uint8_t       EndpointSize;
+  uint8_t       Interface;
+  uint8_t       Interval; 
+  uint8_t       Pipe;
+  
+  uint8_t       Supported;
+} VIDEO_InterfaceControlTypeDef;
+
+// FIXME - Under the struct
+typedef struct _VIDEO_Process
+{
+  /*
+  VIDEO_ReqStateTypeDef                 req_state;
+  VIDEO_CSReqStateTypeDef               cs_req_state;  
+  VIDEO_PlayStateTypeDef                play_state;  
+  VIDEO_ControlStateTypeDef             control_state; 
+  VIDEO_ProcessingTypeDef               processing_state;
+  */
+  
+  // Video Stream Input/Output Handler
+  VIDEO_VSInOutHandleTypeDef            VSInputHandle[VIDEO_MAX_VIDEO_STD_INTERFACE];
+  VIDEO_VSInOutHandleTypeDef            VSOutputHandle[VIDEO_MAX_VIDEO_STD_INTERFACE];
+  
+  // Class Specific Descriptor
+  VIDEO_ClassSpecificDescTypedef        ClassSpecificDescs;
+  
+  // Interface Properties
+  VIDEO_InterfaceStreamTypeDef          InputStream;
+  VIDEO_InterfaceStreamTypeDef          OutputStream; 
+  VIDEO_InterfaceControlTypeDef         Control;
+  /*
+  uint16_t                              mem[8];
+  uint8_t                               temp_feature;
+  uint8_t                               temp_channels;
+  */
+} VIDEO_HandleTypeDef;
 
 /**
 * @}

@@ -145,6 +145,7 @@
 #define  USB_DESC_TYPE_INTERFACE_POWER                     8
 #define  USB_DESC_TYPE_HID                                 0x21
 #define  USB_DESC_TYPE_HID_REPORT                          0x22
+#define  USB_DESC_TYPE_CS_INTERFACE                        0x24
 
 
 #define USB_DEVICE_DESC_SIZE                               18

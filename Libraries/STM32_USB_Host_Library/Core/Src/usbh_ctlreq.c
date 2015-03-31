@@ -223,7 +223,7 @@ USBH_StatusTypeDef USBH_GetDescriptor(USBH_HandleTypeDef *phost,
     }
     phost->Control.setup.b.wLength.w = length; 
   }
-  return USBH_CtlReq(phost, buff , length );     
+  return USBH_CtlReq(phost, buff, length);
 }
 
 /**
@@ -555,7 +555,7 @@ USBH_StatusTypeDef USBH_CtlReq     (USBH_HandleTypeDef *phost,
     {
       /* Commands successfully sent and Response Received  */       
       phost->RequestState = CMD_SEND;
-      phost->Control.state =CTRL_IDLE;  
+      phost->Control.state = CTRL_IDLE;  
       status = USBH_OK;      
     }
     else if  (status == USBH_FAIL)
@@ -647,7 +647,7 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
     
   case CTRL_DATA_IN:  
     /* Issue an IN token */ 
-     phost->Control.timer = phost->Timer;
+    phost->Control.timer = phost->Timer;
     USBH_CtlReceiveData(phost,
                         phost->Control.buff, 
                         phost->Control.length,
@@ -695,7 +695,7 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
                       phost->Control.length , 
                       phost->Control.pipe_out,
                       1);
-     phost->Control.timer = phost->Timer;
+    phost->Control.timer = phost->Timer;
     phost->Control.state = CTRL_DATA_OUT_WAIT;
     break;
     
@@ -791,7 +791,7 @@ static USBH_StatusTypeDef USBH_HandleControl (USBH_HandleTypeDef *phost)
                       0,
                       phost->Control.pipe_out,
                       1);
-     phost->Control.timer = phost->Timer;
+    phost->Control.timer = phost->Timer;
     phost->Control.state = CTRL_STATUS_OUT_WAIT;
     break;
     
