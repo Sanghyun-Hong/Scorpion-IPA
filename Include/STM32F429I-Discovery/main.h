@@ -42,41 +42,60 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "stm32f429i_discovery.h"
-#include "stm32f429i_discovery_camera.h"
-#include "stm32f429i_discovery_sdram.h"
-#include "stm32f429i_discovery_sram.h"
+#include "stm32f429i_discovery_sd.h"
 
 /* Includes User-defined headers */
-#include "ub_timer.h"
 #include "ub_uart.h"
 
-/* Includes USB headers */
-#include "usbh_core.h"
-#include "usbh_video.h"
+/* Includes FatFs component */
+#include "ff_gen_drv.h"
+#include "sd_diskio.h"
 
 /* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
+
+//////////////////////////// CONFIGURATION BLOCK ///////////////////////////////
 /**
   * Memory Type
   */
 #define USE_INTERNAL_SDRAM
 //#define USE_EXTERNAL_SRAM
-
-/* Camera Frame Buffer Address */
-#ifdef  USE_INTERNAL_SDRAM
-  #define CAMERA_FRAME_BUFFER     0xD0000000
-#elif defined USE_EXTERNAL_SRAM
-  #define CAMERA_FRAME_BUFFER     0x64000000    // Use Bank-2
-#endif
-
 /**
   * Camera Type
   */
 //#define USE_CAMERA_DCMI
 #define USE_CAMERA_USB
+////////////////////////////////////////////////////////////////////////////////
 
-/* Camera USB host device handle */
-#ifdef  USE_CAMERA_USB
+/* Exported constants --------------------------------------------------------*/
+
+/**
+  * Memory Type
+  */
+#ifdef  USE_INTERNAL_SDRAM /////////////////////////////////////////////////////
+  // Include SDRAM Headers
+  #include "stm32f429i_discovery_sdram.h"
+  // Define Framebuffer Address
+  #define CAMERA_FRAME_BUFFER     0xD0000000
+#elif defined USE_EXTERNAL_SRAM ////////////////////////////////////////////////
+  // Include SRAM Headers
+  #include "stm32f429i_discovery_sram.h"
+  // Define Framebuffer Address
+  #define CAMERA_FRAME_BUFFER     0x64000000    // Use Bank-2
+#endif  ////////////////////////////////////////////////////////////////////////
+
+/**
+  * Camera Type
+  */
+#ifdef  USE_CAMERA_DCMI ////////////////////////////////////////////////////////
+  // Includes DCMI headers
+  #include "stm32f429i_discovery_camera.h"
+
+#elif defined   USE_CAMERA_USB  ////////////////////////////////////////////////
+  // Includes USB headers
+  #include "usbh_core.h"
+  #include "usbh_video.h"
+
+  // USB Host Application Status
   typedef enum {
     APPLICATION_IDLE = 0,  
     APPLICATION_READY,
@@ -85,7 +104,7 @@
   } VIDEO_ApplicationTypeDef;
     
   extern USBH_HandleTypeDef hUSBHost;
-#endif
+#endif  ////////////////////////////////////////////////////////////////////////
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */

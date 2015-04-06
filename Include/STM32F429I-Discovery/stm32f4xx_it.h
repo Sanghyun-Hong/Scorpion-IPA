@@ -66,6 +66,10 @@ void OTG_HS_IRQHandler(void);
 /* DMA and DCMI Interrupt handler for Camera module */
 void DMA2_Stream1_IRQHandler(void);
 void DCMI_IRQHandler(void);
+/* DMA and SDIO Interrupt handler for SDCARD module */
+void DMA2_Stream3_IRQHandler(void);
+void DMA2_Stream6_IRQHandler(void);
+void SDIO_IRQHandler(void);
 
 #ifdef __cplusplus
 }

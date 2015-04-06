@@ -182,15 +182,7 @@ void USARTx_IRQHandler(void)
   HAL_UART_IRQHandler(& UartHandle);
 }
 
-/**
-  * @brief  This function handles USB-On-The-Go FS/HS global interrupt request.
-  * @param  None
-  * @retval None
-  */
-void OTG_HS_IRQHandler(void)
-{
-  HAL_HCD_IRQHandler(&hhcd);
-}
+#ifdef  USE_CAMERA_DCMI  ///////////////////////////////////////////////////////
 
 /**
   * @brief  This function handles DMA2 Stream1 Handler.
@@ -210,6 +202,50 @@ void DMA2_Stream1_IRQHandler(void)
 void DCMI_IRQHandler(void)
 {
   BSP_CAMERA_IRQHandler();
+}
+
+#elif defined   USE_CAMERA_USB  ////////////////////////////////////////////////
+
+/**
+  * @brief  This function handles USB-On-The-Go FS/HS global interrupt request.
+  * @param  None
+  * @retval None
+  */
+void OTG_HS_IRQHandler(void)
+{
+  HAL_HCD_IRQHandler(&hhcd);
+}
+
+#endif
+
+/**
+  * @brief  This function handles DMA2 Stream 3 interrupt request.
+  * @param  None
+  * @retval None
+  */
+void DMA2_Stream3_IRQHandler(void)
+{
+  BSP_SD_DMA_Rx_IRQHandler();
+}
+
+/**
+  * @brief  This function handles DMA2 Stream 6 interrupt request.
+  * @param  None
+  * @retval None
+  */
+void DMA2_Stream6_IRQHandler(void)
+{
+  BSP_SD_DMA_Tx_IRQHandler(); 
+}
+
+/**
+  * @brief  This function handles SDIO interrupt request.
+  * @param  None
+  * @retval None
+  */
+void SDIO_IRQHandler(void)
+{
+  BSP_SD_IRQHandler();
 }
 
 /**

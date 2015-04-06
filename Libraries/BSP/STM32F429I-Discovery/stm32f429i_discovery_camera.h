@@ -51,7 +51,7 @@
 #include "../Components/mt9m111/mt9m111.h"
 
 /* Include uart debug function */
-extern HAL_StatusTypeDef UB_UART_Debug(const char * format, ...);
+extern HAL_StatusTypeDef UB_UART_Debug(uint8_t * str, uint16_t len);
    
 /** @addtogroup BSP
   * @{

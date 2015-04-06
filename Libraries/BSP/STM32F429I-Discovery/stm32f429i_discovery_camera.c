@@ -673,7 +673,6 @@ __weak void BSP_CAMERA_ErrorCallback(void)
   /* NOTE : This function Should not be modified, when the callback is needed,
             the HAL_DCMI_ErrorCallback could be implemented in the user file
    */
-  UB_UART_Debug("ERROR: DCMI Error Occured");
 }
 
 /**

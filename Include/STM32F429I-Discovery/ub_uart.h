@@ -70,7 +70,7 @@ HAL_StatusTypeDef UB_UART_Init(USART_TypeDef *instance,
 HAL_StatusTypeDef UB_UART_DeInit(void);
 HAL_StatusTypeDef UB_UART_Transmit(uint8_t *pData, uint16_t Size);
 HAL_StatusTypeDef UB_UART_Receive(uint8_t *pData, uint16_t Size);
-HAL_StatusTypeDef UB_UART_Debug(const char * format, ...);
+HAL_StatusTypeDef UB_UART_Debug(uint8_t * str, uint16_t len);
 
 #ifdef __cplusplus
 }

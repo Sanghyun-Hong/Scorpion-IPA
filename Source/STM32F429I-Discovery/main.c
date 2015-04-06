@@ -38,39 +38,43 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+/* Includes standard C headers */
+#include <stdio.h>
+#include <stdarg.h>
+#include <stdlib.h>
+
 /** @addtogroup STM32F4xx_HAL_Examples
   * @{
   */
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-/* A flag for enabling debugging messages in main */
-#ifndef DEBUG_MAIN
-#define DEBUG_MAIN
-#endif
+#define DEBUG_MAIN      // Enable debugging
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-/* Counter Prescaler value */
-uint32_t uhPrescalerValue = 0;
+/* SDCARD Device Variables */
+FATFS RAMDISKFatFs;     /* File system object for RAM disk logical drive */
+FIL MyFile;             /* File object */
+char RAMDISKPath[4];    /* RAM disk logical drive path */
 
 /* USB Device Handler for Camera Module */
-#ifdef  USE_CAMERA_USB
+#ifdef  USE_CAMERA_USB  ////////////////////////////////////////////////////////
   USBH_HandleTypeDef hUSBHost;
   VIDEO_ApplicationTypeDef Appli_state = APPLICATION_IDLE;
-#endif
+#endif  ////////////////////////////////////////////////////////////////////////
 
 /* Private function prototypes -----------------------------------------------*/
-#ifdef  USE_CAMERA_DCMI
+#ifdef  USE_CAMERA_DCMI ////////////////////////////////////////////////////////
   static void SavePicture(void);
-#elif   defined USE_CAMERA_USB
+#elif   defined USE_CAMERA_USB  ////////////////////////////////////////////////
   static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
   static void SavePicture_Process(void);
-#endif
+  static void SavePicture(void);
+#endif  ////////////////////////////////////////////////////////////////////////
 static void SystemClock_Config(void);
 static void Error_Handler(void);
-static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
-
+static void UART_Debug(const char * format, ...);
 
 /* Private functions ---------------------------------------------------------*/
 /**
@@ -119,13 +123,7 @@ int main(void)
   {
     Error_Handler();
   }
-
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Initialization Done: UART/USART.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug("Initialization Done: UART/USART.\n");
   
   /* Configure the memory for storing captured image:
       - If it uses internal SDRAM, then enable the memory
@@ -133,46 +131,22 @@ int main(void)
 #ifdef  USE_INTERNAL_SDRAM      // USE_INTERNAL_SDRAM //////////////////////////
   /* Initialize the internal SDRAM */
   BSP_SDRAM_Init();
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Initialization Done: SDRAM(Internal).\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug("Initialization Done: SDRAM(Internal).\n");
   
   /* For testing the initialized memory */
   *(__IO uint32_t*) (CAMERA_FRAME_BUFFER) = 0x1234ABCD;
   uint32_t read_value = *(__IO uint32_t*) (CAMERA_FRAME_BUFFER);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug(" SDRAM: Check the data = 0x%X.\n", read_value)!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug(" SDRAM: Check the data = 0x%X.\n", read_value);
   
 #elif defined USE_EXTERNAL_SRAM // USE_EXTERNAL_SRAM ///////////////////////////
   /* Initialize the external SRAM */
   BSP_SRAM_Init();
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Initialization Done: SRAM(External).\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug("Initialization Done: SRAM(External).\n");
   
   /* For testing the initialized memory */
   BSP_SRAM_Write(0x00, 0xABCD);
   uint16_t read_value = BSP_SRAM_Read(0x00);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug(" SRAM: Check the data = 0x%X.\n", read_value)!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug(" SRAM: Check the data = 0x%X.\n", read_value);
   
 #endif  ////////////////////////////////////////////////////////////////////////
   
@@ -189,43 +163,19 @@ int main(void)
   
   /* Output HSE divided by 4 on MCO1 pin(PA8) */ 
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_4);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Initialization Done: Camera MCLK - MCO1(PA8).\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug("Initialization Done: Camera MCLK - MCO1(PA8).\n");
 
   /* Initialize the Camera */
   BSP_CAMERA_Init();
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Initialization Done: MT9M111 Camera Module.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif  
+  UART_Debug("Initialization Done: MT9M111 Camera Module.\n");
 
   /* For testing the initialized module */
   uint16_t version = BSP_CAMERA_GetVersion();
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug(" MT9M111: Camera Module Version = 0x%X.\n", version)!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif  
+  UART_Debug(" MT9M111: Camera Module Version = 0x%X.\n", version);
   
   /* Start the Camera Capture */
   BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug(" MT9M111: Capturing Started with Continuous Mode.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug(" MT9M111: Capturing Started with Continuous Mode.\n");
   
 #elif defined USE_CAMERA_USB    // USE USB interface ///////////////////////////
   
@@ -238,33 +188,15 @@ int main(void)
   
   /* Init Device Library */
   USBH_Init(&hUSBHost, USBH_UserProcess, 0);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Initialization Done: UVC Camera as an USB device.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif 
+  UART_Debug("Initialization Done: UVC Camera as an USB device.\n");
   
   /* Add Supported Class */
   USBH_RegisterClass(&hUSBHost, USBH_VIDEO_CLASS);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug(" UVC Camera: Register Class.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug(" UVC Camera: Register Class.\n");
   
   /* Start Device Process */
   USBH_Start(&hUSBHost);
-  
-#ifdef  DEBUG_MAIN
-  if(UB_UART_Debug(" UVC Camera: Start the process.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
-#endif
+  UART_Debug(" UVC Camera: Start the process.\n");
   
 #endif   ///////////////////////////////////////////////////////////////////////
   
@@ -312,12 +244,8 @@ int main(void)
     /* Delay for another capture */
     HAL_Delay(500);
     
-#ifdef  DEBUG_MAIN
-    if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
-    {
-      Error_Handler();
-    }
-#endif
+    /* Debug message */
+    UART_Debug("Capture the camera image and send the data through UART/USART.\n");
   }
 }
 
@@ -392,11 +320,13 @@ static void SavePicture_Process(void)
   switch(Appli_state)
   {
   case APPLICATION_IDLE:
-    break;
   case APPLICATION_READY:
+    // Intentionally go through
     break;
   case APPLICATION_CONNECT:
     BSP_LED_On(LED3);
+    // Save the image from the camera
+    SavePicture();
     break;
   case APPLICATION_DISCONNECT:
     BSP_LED_Off(LED3);
@@ -407,7 +337,103 @@ static void SavePicture_Process(void)
   }
 }
 
-#endif                          ////////////////////////////////////////////////
+/**
+  * @brief  SavePicture Function
+  * @param  None
+  * @retval None
+  */
+static void SavePicture(void)
+{
+  FRESULT res;                                          /* FatFs function common result code */
+  uint32_t byteswritten, bytesread;                     /* File write/read counts */                              
+  uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
+  uint8_t rtext[100];                                   /* File read buffer */
+  
+  /*##-1- Link the RAM disk I/O driver #######################################*/
+  if(FATFS_LinkDriver(&SD_Driver, RAMDISKPath) == 0)
+  {
+    /*##-2- Register the file system object to the FatFs module ##############*/
+    if(f_mount(&RAMDISKFatFs, (TCHAR const*)RAMDISKPath, 0) != FR_OK)
+    {
+      /* FatFs Initialization Error */
+      Error_Handler();
+    }
+    else
+    {
+      /*##-3- Create a FAT file system (format) on the logical drive #########*/
+      if(f_mkfs((TCHAR const*)RAMDISKPath, 0, 0) != FR_OK) 
+      {
+        /* FatFs Format Error */
+        Error_Handler();
+      }
+      else
+      {      
+        /*##-4- Create and Open a new text file object with write access #####*/
+      if(f_open(&MyFile, "SAVEPICTURE.TXT", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) 
+      {
+        /* 'STM32.TXT' file Open for write Error */
+        Error_Handler();
+      }
+      else
+      {
+        /*##-5- Write data to the text file ################################*/
+        res = f_write(&MyFile, wtext, sizeof(wtext), (void *)&byteswritten);
+        
+        if((byteswritten == 0) || (res != FR_OK))
+        {
+          /* 'STM32.TXT' file Write or EOF Error */
+          Error_Handler();
+        }
+        else
+        {
+            /*##-6- Close the open text file #################################*/
+          f_close(&MyFile);
+          
+            /*##-7- Open the text file object with read access ###############*/
+          if(f_open(&MyFile, "STM32.TXT", FA_READ) != FR_OK)
+          {
+            /* 'STM32.TXT' file Open for read Error */
+            Error_Handler();
+          }
+          else
+          {
+              /*##-8- Read data from the text file ###########################*/
+            res = f_read(&MyFile, rtext, sizeof(rtext), (void *)&bytesread);
+            
+              if((bytesread == 0) || (res != FR_OK))
+            {
+              /* 'STM32.TXT' file Read or EOF Error */
+              Error_Handler();
+            }
+            else
+            {
+                /*##-9- Close the open text file #############################*/
+              f_close(&MyFile);
+              
+                /*##-10- Compare read data with the expected data ############*/
+                if ((bytesread != byteswritten))
+                {                
+                  /* Read data is different from the expected data */
+                  Error_Handler(); 
+                }
+                else
+                {
+                  /* Success of the demo: no error occurrence */
+                  UART_Debug("  Successfully write to SDCARD with filename 'STM32.txt'.\n");
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  /*##-11- Unlink the RAM disk I/O driver ####################################*/
+  FATFS_UnLinkDriver(RAMDISKPath);
+}
+
+#endif  ////////////////////////////////////////////////////////////////////////
 
 /**
   * @brief  System Clock Configuration
@@ -511,20 +537,27 @@ static void Error_Handler(void)
   * @retval 0  : pBuffer1 identical to pBuffer2
   *         >0 : pBuffer1 differs from pBuffer2
   */
-static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
+static void UART_Debug(const char * format, ...)
 {
-  while (BufferLength--)
+#ifdef DEBUG_MAIN       ////////////////////////////////////////////////////////
+  va_list list;
+  va_start(list, format);
+  
+  int len = vsnprintf(0, 0, format, list);
+  char *str = (char *) malloc(len + 1);
+  vsprintf(str, format, list);
+  
+  /* Sends debug message through UART interface */ 
+  if(UB_UART_Debug((uint8_t *)str, len) != HAL_OK)
   {
-    if ((*pBuffer1) != *pBuffer2)
-    {
-      return BufferLength;
-    }
-    pBuffer1++;
-    pBuffer2++;
+    Error_Handler();
   }
-
-  return 0;
+  
+  free(str);
+  va_end(list);
+#endif  // DEBUG_MAIN //////////////////////////////////////////////////////////
 }
+
 
 #ifdef  USE_FULL_ASSERT
 
