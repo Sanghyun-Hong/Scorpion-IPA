@@ -1,11 +1,11 @@
 /**
   ******************************************************************************
-  * @file    stm324x9i_eval_camera.h
+  * @file    stm32f429i_discovery_camera.h
   * @author  MCD Application Team
   * @version V2.0.3
   * @date    10-December-2014
   * @brief   This file contains the common defines and functions prototypes for
-  *          the stm324x9i_eval_camera.c driver.
+  *          the stm32f429i_discovery_camera.c driver.
   ******************************************************************************
   * @attention
   *
@@ -45,7 +45,6 @@
 #endif 
 
 /* Includes ------------------------------------------------------------------*/
-/* Include IO Driver */
 #include "stm32f429i_discovery.h"
    
 /* Include Camera component Driver */
@@ -58,18 +57,48 @@ extern HAL_StatusTypeDef UB_UART_Debug(const char * format, ...);
   * @{
   */
 
-/** @addtogroup STM324x9I_EVAL
+/** @addtogroup STM32F429I_DISCOVERY
   * @{
   */
     
-/** @addtogroup STM324x9I_EVAL_CAMERA
+/** @addtogroup STM32F429I_DISCOVERY_CAMERA
   * @{
   */ 
-   
-/** @defgroup STM324x9I_EVAL_CAMERA_Exported_Types
+/* Enabling the camera power control feature */    
+#ifndef CAMERA_POWER_CONTROL
+// #define CAMERA_POWER_CONTROL
+#endif
+/**
+  * @}
+  */ 
+    
+/** @addtogroup STM32F429I_DISCOVERY_CAMERA_LOW_LEVEL_CAMERA
+  * @{
+  */ 
+#ifdef  CAMERA_POWER_CONTROL    
+  #define POWER_PIN                               GPIO_PIN_1
+  #define POWER_GPIO_PORT                         GPIOA
+  #define POWER_GPIO_CLK_ENABLE()                 __GPIOA_CLK_ENABLE()  
+  #define POWER_GPIO_CLK_DISABLE()                __GPIOA_CLK_DISABLE()  
+  
+  #define STANDBY_PIN                             GPIO_PIN_3
+  #define STANDBY_GPIO_PORT                       GPIOA
+  #define STANDBY_GPIO_CLK_ENABLE()               __GPIOA_CLK_ENABLE()  
+  #define STANDBY_GPIO_CLK_DISABLE()              __GPIOA_CLK_DISABLE()  
+
+  #define CS_PIN                                  GPIO_PIN_5
+  #define CS_GPIO_PORT                            GPIOA
+  #define CS_GPIO_CLK_ENABLE()                    __GPIOA_CLK_ENABLE()  
+  #define CS_GPIO_CLK_DISABLE()                   __GPIOA_CLK_DISABLE()  
+#endif
+/**
+  * @}
+  */ 
+
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Exported_Types
   * @{
   */
-  
+
 /** 
   * @brief  Camera State structures definition  
   */  
@@ -78,7 +107,7 @@ typedef enum
   CAMERA_OK       = 0x00,
   CAMERA_ERROR    = 0x01,
   CAMERA_TIMEOUT  = 0x02 
-}Camera_StatusTypeDef;
+} Camera_StatusTypeDef;
 
 #define RESOLUTION_R160x120      CAMERA_R160x120      /* QQVGA Resolution     */
 #define RESOLUTION_R320x240      CAMERA_R320x240      /* QVGA Resolution      */
@@ -91,38 +120,39 @@ typedef enum
 /** @defgroup STM32F4_DISCOVERY_CAMERA_Exported_Constants
   * @{
   */
-/* Slave address when SADDR is high  */
-#define MT9M111_I2C_ADDRESS     0xBA
-#define MT9M111_I2c_ADDRESS_RD  0xBB
 
-/**
-  * @}
-  */
-
-/** @defgroup STM324x9I_EVAL_CAMERA_Exported_Functions
+/** @defgroup STM32F429I_DISCOVERY_CAMERA_Exported_Functions
   * @{
   */
-uint8_t BSP_CAMERA_Init(uint32_t Resolution);  
-void    BSP_CAMERA_ContinuousStart(uint8_t *buff);
-void    BSP_CAMERA_SnapshotStart(uint8_t *buff);
-void    BSP_CAMERA_Suspend(void);
-void    BSP_CAMERA_Resume(void);
-uint8_t BSP_CAMERA_Stop(void); 
-void    BSP_CAMERA_LineEventCallback(void);
-void    BSP_CAMERA_VsyncEventCallback(void);
-void    BSP_CAMERA_FrameEventCallback(void);
-void    BSP_CAMERA_ErrorCallback(void);
-
-/* Camera features functions prototype */
-void    BSP_CAMERA_ContrastBrightnessConfig(uint32_t contrast_level, uint32_t brightness_level);
-void    BSP_CAMERA_BlackWhiteConfig(uint32_t Mode);
-void    BSP_CAMERA_ColorEffectConfig(uint32_t Effect);
-
+/* Camera setup functions */
+void            BSP_CAMERA_Init(void);
+#ifdef  CAMERA_POWER_CONTROL
+  void            BSP_CAMERA_PowerOn(void);
+  void            BSP_CAMERA_PowerOff(void);
+  void            BSP_CAMERA_Standby(void);
+  void            BSP_CAMERA_WakeUp(void);
+  uint8_t         BSP_CAMERA_IsOn(void);
+  uint8_t         BSP_CAMERA_IsAwake(void);
+  void            BSP_CAMERA_EnableOutput(void);
+  void            BSP_CAMERA_DisableOutput(void);
+#endif
+/* Camera control functions */
+uint16_t        BSP_CAMERA_GetVersion(void);
+void            BSP_CAMERA_SnapshotStart(uint8_t *buff);
+void            BSP_CAMERA_ContinuousStart(uint8_t *buff);
+void            BSP_CAMERA_Suspend(void);
+void            BSP_CAMERA_Resume(void);
+uint8_t         BSP_CAMERA_Stop(void);
+/* DCMI event callback functions */
+void            BSP_CAMERA_LineEventCallback(void);
+void            BSP_CAMERA_VsyncEventCallback(void);
+void            BSP_CAMERA_FrameEventCallback(void);
+void            BSP_CAMERA_ErrorCallback(void);
 /* To be called in DCMI_IRQHandler function */
-void    BSP_CAMERA_IRQHandler(void);
+void            BSP_CAMERA_IRQHandler(void);
 /* To be called in DMA2_Stream1_IRQHandler function */
-void    BSP_CAMERA_DMA_IRQHandler(void);
-   
+void            BSP_CAMERA_DMA_IRQHandler(void);
+
 /**
   * @}
   */ 

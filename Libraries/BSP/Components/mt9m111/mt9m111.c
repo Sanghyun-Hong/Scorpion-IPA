@@ -51,50 +51,32 @@
   
 /** @defgroup MT9M111_Private_Variables
   * @{
-  */        
-
-CAMERA_DrvTypeDef   mt9m111_drv = 
-{
-  MT9M111_Init,
-};
-
-/**
-  * @}
-  */
+  */ 
   
 /** @defgroup MT9M111_Private_Functions
   * @{
   */ 
   
 /**
-  * @brief  Initializes the MT9M111 CAMERA component.
-  * @param  DeviceAddr: Device address on communication Bus.
-  * @param  resolution: Camera resolution
-  * @retval None
+  * @brief  Initializes the MT9M111 module.
+  * @param  None.
+  * @retval None.
   */
-void MT9M111_Init(uint16_t DeviceAddr, uint32_t resolution)
-{
-  uint32_t index;
-  
+void MT9M111_Init(void)
+{ 
   /* Initialize I2C */
   CAMERA_IO_Init();
-  
-  /* FIXME - Initialize MT9M111 */
-
 }
 
 /**
   * @brief  Read the MT9M111 Camera version.
   * @param  DeviceAddr: Device address on communication Bus.
-  * @retval the MT9M111 Version
+  * @retval The MT9M111 module version.
   */
-uint16_t MT9M111_ReadVersion(uint16_t DeviceAddr)
+uint16_t MT9M111_ReadVersion(void)
 {
-  /* Initialize I2C */
-  CAMERA_IO_Init();
-  
   /* Get the camera version */
-  return (CAMERA_IO_ReadWord(DeviceAddr, MT9M111_CHIP_VERSION));
+  return (CAMERA_IO_ReadWord(MT9M111_I2C_ADDRESS, MT9M111_CHIP_VERSION));
 }
 
 /******************************************************************************

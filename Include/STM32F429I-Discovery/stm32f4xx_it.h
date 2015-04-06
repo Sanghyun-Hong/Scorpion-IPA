@@ -61,6 +61,8 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 void SysTick_Handler(void);
 void USARTx_IRQHandler(void);
+/* USB-On-The-Go FS/HS global Interrupt handler */
+void OTG_HS_IRQHandler(void);
 /* DMA and DCMI Interrupt handler for Camera module */
 void DMA2_Stream1_IRQHandler(void);
 void DCMI_IRQHandler(void);

@@ -168,7 +168,9 @@
         <debug>1</debug>
         <option>
           <name>CCDefines</name>
-          <state></state>
+          <state>USE_HAL_DRIVER</state>
+          <state>STM32F429xx</state>
+          <state>USE_USB_FS</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -301,6 +303,8 @@
           <state>$PROJ_DIR$\..\..\Libraries\BSP\STM32F429I-Discovery</state>
           <state>$PROJ_DIR$\..\..\Libraries\CMSIS\Include</state>
           <state>$PROJ_DIR$\..\..\Libraries\STM32F4xx_HAL_Driver\inc</state>
+          <state>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Core\Inc</state>
+          <state>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Class\Video\Inc</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -960,12 +964,51 @@
     </file>
   </group>
   <group>
+    <name>EWARM</name>
+    <file>
+      <name>$PROJ_DIR$\startup_stm32f429xx.s</name>
+    </file>
+  </group>
+  <group>
+    <name>STM32_USBH_Library</name>
+    <group>
+      <name>Class</name>
+      <group>
+        <name>Video</name>
+        <file>
+          <name>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Class\Video\Src\usbh_video.c</name>
+        </file>
+      </group>
+    </group>
+    <group>
+      <name>Core</name>
+      <file>
+        <name>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Core\Src\usbh_core.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Core\Src\usbh_ctlreq.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Core\Src\usbh_ioreq.c</name>
+      </file>
+      <file>
+        <name>$PROJ_DIR$\..\..\Libraries\STM32_USB_Host_Library\Core\Src\usbh_pipes.c</name>
+      </file>
+    </group>
+  </group>
+  <group>
     <name>STM32F429I-Discovery</name>
     <file>
       <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F429I-Discovery\stm32f429i_discovery.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F429I-Discovery\stm32f429i_discovery_camera.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F429I-Discovery\stm32f429i_discovery_sdram.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Libraries\BSP\STM32F429I-Discovery\stm32f429i_discovery_sram.c</name>
     </file>
   </group>
   <group>
@@ -1134,6 +1177,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\Source\STM32F429I-Discovery\ub_uart.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\Source\STM32F429I-Discovery\usbh_conf.c</name>
     </file>
   </group>
 </project>

@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    Templates/Src/stm32f4xx_hal_msp.c
+  * @file    Source/stm32f4xx_hal_msp.c
   * @author  MCD Application Team
   * @version V1.2.0
   * @date    26-December-2014
@@ -94,6 +94,109 @@ void HAL_MspDeInit(void)
             modified by the user
    */
 }
+
+/**
+  * @brief SRAM MSP Initialization 
+  *        This function configures the hardware resources used in this example: 
+  *           - Peripheral's clock enable
+  *           - Peripheral's GPIO Configuration  
+  * @param hsram: SRAM handle pointer
+  * @retval None
+  */
+void HAL_SRAM_MspInit(SRAM_HandleTypeDef *hsram)
+{
+  GPIO_InitTypeDef GPIO_Init_Structure;
+
+  /* Enable FMC clock */
+  __HAL_RCC_FMC_CLK_ENABLE();
+  
+  /* Enable GPIOs clock */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  
+  /* Common GPIO configuration */
+  GPIO_Init_Structure.Mode      = GPIO_MODE_AF_PP;
+  GPIO_Init_Structure.Pull      = GPIO_PULLUP;
+  GPIO_Init_Structure.Speed     = GPIO_SPEED_HIGH;
+  GPIO_Init_Structure.Alternate = GPIO_AF12_FMC;
+  
+  /*-- SRAM GPIOs Configuration --------------------------------------------------*/
+  /* 
+  +-------------------+------------------+-------------------+
+  | PD14 <-> FMC_D0   | PF0  <-> FMC_A0  | PE0  <-> FMC_NBL0 |
+  | PD15 <-> FMC_D1   | PF1  <-> FMC_A1  | PE1  <-> FMC_NBL1 |
+  | PD0  <-> FMC_D2   | PF2  <-> FMC_A2  | PD4  <-> FMC_NOE  |
+  | PD1  <-> FMC_D3   | PF3  <-> FMC_A3  | PD5  <-> FMC_NWE  |
+  | PE7  <-> FMC_D4   | PF4  <-> FMC_A4  | PG9	<-> FMC_NE2  |
+  | PE8  <-> FMC_D5   | PF5  <-> FMC_A5  |-------------------+
+  | PE9  <-> FMC_D6   | PF12 <-> FMC_A6  |
+  | PE10 <-> FMC_D7   | PF13 <-> FMC_A7  |
+  | PE11 <-> FMC_D8   | PF14 <-> FMC_A8  |
+  | PE12 <-> FMC_D9   | PF15 <-> FMC_A9  |
+  | PE13 <-> FMC_D10  | PG0  <-> FMC_A10 |
+  | PE14 <-> FMC_D11  | PG1  <-> FMC_A11 |
+  | PE15 <-> FMC_D12  | PG2  <-> FMC_A12 |
+  | PD8  <-> FMC_D13  | PG3  <-> FMC_A13 |
+  | PD9  <-> FMC_D14  | PG4  <-> FMC_A14 |
+  | PD10 <-> FMC_D15  | PG5  <-> FMC_A15 |
+  +-------------------| PD11 <-> FMC_A16 |
+                      | PD12 <-> FMC_A17 |
+                      | PD13 <-> FMC_A18 |
+                      +------------------+
+  */
+  
+  /* GPIOD configuration */
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8     |\
+                              GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |\
+                              GPIO_PIN_14 | GPIO_PIN_15;   
+  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
+
+  /* GPIOE configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9     |\
+                              GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
+                              GPIO_PIN_15;
+  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure);
+  
+  /* GPIOF configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4     |\
+                              GPIO_PIN_5 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15; 
+  HAL_GPIO_Init(GPIOF, &GPIO_Init_Structure);
+  
+  /* GPIOG configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 |\
+                              GPIO_PIN_5 | GPIO_PIN_9;
+  HAL_GPIO_Init(GPIOG, &GPIO_Init_Structure);
+    
+}
+
+/**
+  * @brief SRAM MSP De-Initialization 
+  *        This function frees the hardware resources used in this example:
+  *          - Disable the Peripheral's clock
+  *          - Revert GPIO configuration to their default state
+  * @param hsram: SRAM handle pointer
+  * @retval None
+  */
+void HAL_SRAM_MspDeInit(SRAM_HandleTypeDef *hsram)
+{
+  /* Disable peripherals and GPIO Clocks */
+  HAL_GPIO_DeInit(GPIOD, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_8    |\
+                         GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 |\
+                         GPIO_PIN_14 | GPIO_PIN_15);
+  
+  HAL_GPIO_DeInit(GPIOE, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9    |\
+                         GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 |\
+                         GPIO_PIN_15);
+                  
+  HAL_GPIO_DeInit(GPIOF, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4    |\
+                         GPIO_PIN_5 | GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15);
+ 
+  HAL_GPIO_DeInit(GPIOG, GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2| GPIO_PIN_3 | GPIO_PIN_4 |\
+                         GPIO_PIN_5 | GPIO_PIN_9);
+}
+
 
 /**
   * @brief UART MSP Initialization 

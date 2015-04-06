@@ -1,9 +1,9 @@
 /**
   ******************************************************************************
-  * @file    Templates/Src/main.c 
-  * @author  MCD Application Team
-  * @version V1.2.0
-  * @date    26-December-2014
+  * @file    Source/main.c 
+  * @author  Hong, Sanghyun
+  * @version V0.1.0
+  * @date    17-March-2015
   * @brief   Main program body
   ******************************************************************************
   * @attention
@@ -42,10 +42,6 @@
   * @{
   */
 
-/** @addtogroup Templates
-  * @{
-  */
-
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* A flag for enabling debugging messages in main */
@@ -58,8 +54,19 @@
 /* Counter Prescaler value */
 uint32_t uhPrescalerValue = 0;
 
+/* USB Device Handler for Camera Module */
+#ifdef  USE_CAMERA_USB
+  USBH_HandleTypeDef hUSBHost;
+  VIDEO_ApplicationTypeDef Appli_state = APPLICATION_IDLE;
+#endif
+
 /* Private function prototypes -----------------------------------------------*/
-static void SavePicture(void);
+#ifdef  USE_CAMERA_DCMI
+  static void SavePicture(void);
+#elif   defined USE_CAMERA_USB
+  static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id);
+  static void SavePicture_Process(void);
+#endif
 static void SystemClock_Config(void);
 static void Error_Handler(void);
 static uint16_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
@@ -85,8 +92,9 @@ int main(void)
      */
   HAL_Init();
 
-  /* Configure LED3 */
+  /* Configure LED3,4 */
   BSP_LED_Init(LED3);
+  BSP_LED_Init(LED4);
   
   /* Configure KEY Button */
   BSP_PB_Init(BUTTON_KEY, BUTTON_MODE_GPIO);
@@ -113,47 +121,163 @@ int main(void)
   }
 
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("UART/USART Initialization Done.\n")!= HAL_OK)
+  if(UB_UART_Debug("Initialization Done: UART/USART.\n")!= HAL_OK)
   {
     Error_Handler();
   }
 #endif
   
+  /* Configure the memory for storing captured image:
+      - If it uses internal SDRAM, then enable the memory
+      - If is uses external SRAM, then enable the memory module */
+#ifdef  USE_INTERNAL_SDRAM      // USE_INTERNAL_SDRAM //////////////////////////
+  /* Initialize the internal SDRAM */
+  BSP_SDRAM_Init();
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Initialization Done: SDRAM(Internal).\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* For testing the initialized memory */
+  *(__IO uint32_t*) (CAMERA_FRAME_BUFFER) = 0x1234ABCD;
+  uint32_t read_value = *(__IO uint32_t*) (CAMERA_FRAME_BUFFER);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" SDRAM: Check the data = 0x%X.\n", read_value)!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+#elif defined USE_EXTERNAL_SRAM // USE_EXTERNAL_SRAM ///////////////////////////
+  /* Initialize the external SRAM */
+  BSP_SRAM_Init();
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Initialization Done: SRAM(External).\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* For testing the initialized memory */
+  BSP_SRAM_Write(0x00, 0xABCD);
+  uint16_t read_value = BSP_SRAM_Read(0x00);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" SRAM: Check the data = 0x%X.\n", read_value)!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+#endif  ////////////////////////////////////////////////////////////////////////
+  
+  /* Configure the camera for capturing image:
+      - If it uses DCMI interface, then enabling DCMI interface
+      - If is uses USB interface, then enabling UVC interface */
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
+  
+  /** This Section is for the DCMI camera interface
+    *   - Initialize the master clock (mclk).
+    *   - Initialize the camera module.
+    *   - Start the module with continuous mode.
+    */
+  
   /* Output HSE divided by 4 on MCO1 pin(PA8) */ 
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSE, RCC_MCODIV_4);
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("MCO1(PA8) Initialization Done for Cam MCLK.\n")!= HAL_OK)
+  if(UB_UART_Debug("Initialization Done: Camera MCLK - MCO1(PA8).\n")!= HAL_OK)
   {
     Error_Handler();
   }
 #endif
 
   /* Initialize the Camera */
-  BSP_CAMERA_Init(RESOLUTION_R320x240);
+  BSP_CAMERA_Init();
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("MT9M111 Camera Module Initialization Done.\n")!= HAL_OK)
+  if(UB_UART_Debug("Initialization Done: MT9M111 Camera Module.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif  
+
+  /* For testing the initialized module */
+  uint16_t version = BSP_CAMERA_GetVersion();
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" MT9M111: Camera Module Version = 0x%X.\n", version)!= HAL_OK)
   {
     Error_Handler();
   }
 #endif  
   
   /* Start the Camera Capture */
-  // FIXME(buffer) - BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
+  BSP_CAMERA_ContinuousStart((uint8_t *)CAMERA_FRAME_BUFFER);
   
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("MT9M111 Capturing Started with Continuous Mode.\n")!= HAL_OK)
+  if(UB_UART_Debug(" MT9M111: Capturing Started with Continuous Mode.\n")!= HAL_OK)
   {
     Error_Handler();
   }
 #endif
+  
+#elif defined USE_CAMERA_USB    // USE USB interface ///////////////////////////
+  
+  /** This Section is for the USB camera interface
+    *   - Initialize the USB host device driver.
+    *   - Register the USB host device class.
+    *   - Register the USB camera video class.
+    *   - Start the USB camera device.
+    */
+  
+  /* Init Device Library */
+  USBH_Init(&hUSBHost, USBH_UserProcess, 0);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug("Initialization Done: UVC Camera as an USB device.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif 
+  
+  /* Add Supported Class */
+  USBH_RegisterClass(&hUSBHost, USBH_VIDEO_CLASS);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" UVC Camera: Register Class.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+  /* Start Device Process */
+  USBH_Start(&hUSBHost);
+  
+#ifdef  DEBUG_MAIN
+  if(UB_UART_Debug(" UVC Camera: Start the process.\n")!= HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
+  
+#endif   ///////////////////////////////////////////////////////////////////////
   
   /**
     * Execute user-defined code, which are enlisted below
     */
   while (1)
   {
+    /* Capture images by using the camera:
+      - SavePicture(): Use the DCMI interface
+      - USBH_Process(): Use the USB interface */
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
+    
     /* Turn LED3 off */
     BSP_LED_Off(LED3);
     
@@ -175,17 +299,29 @@ int main(void)
     /* Turn LED3 on: Success capture */
     BSP_LED_Off(LED3);
     
+#elif defined   USE_CAMERA_USB  // USE USB interface ///////////////////////////
+    
+    /* USB Host Background task */
+    USBH_Process(&hUSBHost);
+    
+    /* Saving picture with USB camera module */
+    SavePicture_Process();
+    
+#endif                          ////////////////////////////////////////////////
+    
     /* Delay for another capture */
     HAL_Delay(500);
     
 #ifdef  DEBUG_MAIN
-  if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
-  {
-    Error_Handler();
-  }
+    if(UB_UART_Debug("Capture the camera image and send the data through UART/USART.\n")!= HAL_OK)
+    {
+      Error_Handler();
+    }
 #endif
   }
 }
+
+#ifdef  USE_CAMERA_DCMI         // USE DCMI interface //////////////////////////
 
 /**
   * @brief  Frame Event callback.
@@ -214,18 +350,77 @@ static void SavePicture(void)
   BSP_CAMERA_Resume();
 }
 
+#elif defined   USE_CAMERA_USB  // USE USB interface ///////////////////////////
+
+/**
+  * @brief  User Process
+  * @param  phost: Host Handle
+  * @param  id: Host Library user message ID
+  * @retval None
+  */
+static void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id)
+{
+  switch(id)
+  { 
+  case HOST_USER_SELECT_CONFIGURATION:
+    break;
+    
+  case HOST_USER_DISCONNECTION:
+    Appli_state = APPLICATION_DISCONNECT;
+    break;
+    
+  case HOST_USER_CLASS_ACTIVE:
+    Appli_state = APPLICATION_READY;
+    break;
+    
+  case HOST_USER_CONNECTION:
+    Appli_state = APPLICATION_CONNECT;
+    break;
+
+  default:
+    break; 
+  }
+}
+
+/**
+  * @brief  SavePicture Process
+  * @param  None
+  * @retval None
+  */
+static void SavePicture_Process(void) 
+{
+  switch(Appli_state)
+  {
+  case APPLICATION_IDLE:
+    break;
+  case APPLICATION_READY:
+    break;
+  case APPLICATION_CONNECT:
+    BSP_LED_On(LED3);
+    break;
+  case APPLICATION_DISCONNECT:
+    BSP_LED_Off(LED3);
+    break;
+    
+  default:
+    break;
+  }
+}
+
+#endif                          ////////////////////////////////////////////////
+
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow : 
   *            System Clock source            = PLL (HSE)
-  *            SYSCLK(Hz)                     = 180000000
-  *            HCLK(Hz)                       = 180000000
+  *            SYSCLK(Hz)                     = 168000000
+  *            HCLK(Hz)                       = 168000000
   *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 4
   *            APB2 Prescaler                 = 2
   *            HSE Frequency(Hz)              = 8000000
   *            PLL_M                          = 8
-  *            PLL_N                          = 360
+  *            PLL_N                          = 336
   *            PLL_P                          = 2
   *            PLL_Q                          = 7
   *            VDD(V)                         = 3.3
@@ -253,7 +448,7 @@ static void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 360;
+  RCC_OscInitStruct.PLL.PLLN = 336;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 7;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
